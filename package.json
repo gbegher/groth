@@ -1,8 +1,12 @@
 {
   "name": "groth",
-  "version": "1.0.3",
+  "version": "1.2.0",
   "author": "Gerrit Begher",
   "license": "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/gbegher/groth.git"
+  },
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -12,7 +16,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "check": "tsc --noEmit"
+    "validate": "tsc --noEmit"
   },
   "main": "dist/index.js",
   "devDependencies": {
