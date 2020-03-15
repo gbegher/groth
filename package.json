@@ -1,0 +1,13 @@
+{
+  "name": "groth",
+  "version": "1.0.0",
+  "author": "Gerrit Begher",
+  "license": "MIT",
+  "private": false,
+  "main": "index.js",
+  "devDependencies": {
+    "@types/node": "^13.9.1",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.3"
+  }
+}
