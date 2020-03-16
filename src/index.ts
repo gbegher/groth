@@ -2,7 +2,7 @@ declare module "./index" {}
 
 // Core
 export * from "./Core/HigherKindedTypes"
-export * from "./Core/Product"
+export * from "./Core/Augmentation"
 export * from "./Core/Sum"
 // Higher Kinded Types
 export * from "./HigherKindedTypes/Category"
@@ -14,6 +14,7 @@ export * from "./HigherKindedTypes/Incorporate"
 export * from "./HigherKindedTypes/Shapeable"
 export * from "./HigherKindedTypes/Transformable"
 // Generics
+export * from "./Generics/Product"
 export * from "./Generics/Array"
 export * from "./Generics/Maybe"
 export * from "./Generics/Named"

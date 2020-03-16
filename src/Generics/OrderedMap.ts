@@ -13,11 +13,18 @@ declare module "../index" {
 
       export const name = "OrderedMap"
       export type name = typeof name
+
+      export type AugmentedType<T> =
+         Reducible<Named<T>>
+
+      export const augmented = "OrderedMap.Augmented"
+      export type augmented = typeof augmented
    }
 
    export namespace Generic {
       export interface Eval<A1> {
          [OrderedMap.name]: OrderedMap.Type<A1>
+         [OrderedMap.augmented]: OrderedMap.AugmentedType<A1>
       }
    }
 }
@@ -31,14 +38,16 @@ import type {
    OrderedMap,
    Named,
    Reducer,
-   Transformable
+   Transformable,
+   Augmentation
 } from ".."
 
 import {
    array,
    forall,
    asReducible as reducibleFrom,
-   transformableFromCollectible
+   transformableFromCollectible,
+   augment
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -72,9 +81,9 @@ const collector: Collectible<OrderedMap.name, Named.name>["collector"] =
       }) as Reducer<Named<S>, OrderedMap<S>>
 
 const { transform } = transformableFromCollectible<OrderedMap.name, Named.name>({
-         asReducible,
-         collector
-      })
+   asReducible,
+   collector
+})
 
 // ---------------------------------------------------------------------------
 // Utility
@@ -94,7 +103,10 @@ export const omEquality = <T>(
 // Augmentation
 // ---------------------------------------------------------------------------
 
-export const ordmap
+const augmentation: Augmentation<OrderedMap.name, OrderedMap.augmented> =
+   asReducible
+
+const higherType
    : Collectible<OrderedMap.name, Named.name>
    & Transformable<OrderedMap.name>
    = {
@@ -102,3 +114,12 @@ export const ordmap
       collector,
       transform,
    }
+
+export const ordmap = augment<
+      OrderedMap.name,
+      OrderedMap.augmented,
+      typeof higherType
+   >(
+      augmentation,
+      higherType
+   )

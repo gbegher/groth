@@ -10,11 +10,18 @@ declare module "../index" {
 
       export const name = "Array"
       export type name = typeof name
+
+      export type AugmentedType<T> =
+         Reducible<T>
+
+      export const augmented = "Array.Augmented"
+      export type augmented = typeof augmented
    }
 
    export namespace Generic {
       export interface Eval<A1> {
          [Array.name]: Array.Type<A1>
+         [Array.augmented]: Array.AugmentedType<A1>
       }
    }
 }
@@ -28,11 +35,13 @@ import type {
    Identity,
    Collectible,
    Reducer,
-   Transformable
+   Transformable,
+   Augmentation
 } from ".."
 
 import {
-   transformableFromCollectible
+   transformableFromCollectible,
+   augment
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -69,7 +78,11 @@ const { transform } =
 // Augmentation
 // ---------------------------------------------------------------------------
 
-export const array
+const augmentation: Augmentation<Array.name, Array.augmented> =
+   <S>(x: Array<S>) =>
+      asReducible(x)
+
+const higherType
    : Collectible<Array.name, Identity.name>
    & Transformable<Array.name>
    = {
@@ -77,3 +90,12 @@ export const array
       collector,
       transform,
    }
+
+export const array = augment<
+      Array.name,
+      Array.augmented,
+      typeof higherType
+   >(
+      augmentation,
+      higherType
+   )
