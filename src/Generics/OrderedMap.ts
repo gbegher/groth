@@ -3,16 +3,16 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type OrderedMap<S> = $<OrderedMap.name, S>
+   export type OrderedMap<S> = $<OrderedMap.type, S>
 
    export namespace OrderedMap {
-      export type Type<T> = {
+      export type Eval<T> = {
          index: string[]
          values: Product<T>
       }
 
-      export const name = "OrderedMap"
-      export type name = typeof name
+      export const type = "OrderedMap"
+      export type type = typeof type
 
       export type AugmentedType<T> =
          Reducible<Named<T>>
@@ -22,8 +22,8 @@ declare module "../index" {
    }
 
    export namespace Generic {
-      export interface Eval<A1> {
-         [OrderedMap.name]: OrderedMap.Type<A1>
+      export interface Register<A1> {
+         [OrderedMap.type]: OrderedMap.Eval<A1>
          [OrderedMap.augmented]: OrderedMap.AugmentedType<A1>
       }
    }
@@ -54,7 +54,7 @@ import {
 // Implementation
 // ---------------------------------------------------------------------------
 
-const asReducible: Collectible<OrderedMap.name, Named.name>["asReducible"] =
+const asReducible: Collectible<OrderedMap.type, Named.type>["asReducible"] =
    <S>({ index, values }: OrderedMap<S>) =>
       ({
          reduce:
@@ -68,7 +68,7 @@ const asReducible: Collectible<OrderedMap.name, Named.name>["asReducible"] =
                })
       })
 
-const collector: Collectible<OrderedMap.name, Named.name>["collector"] =
+const collector: Collectible<OrderedMap.type, Named.type>["collector"] =
    <S>() =>
       ({
          init: () => ({ index: [], values: {} }),
@@ -80,7 +80,7 @@ const collector: Collectible<OrderedMap.name, Named.name>["collector"] =
                })
       }) as Reducer<Named<S>, OrderedMap<S>>
 
-const { transform } = transformableFromCollectible<OrderedMap.name, Named.name>({
+const { transform } = transformableFromCollectible<OrderedMap.type, Named.type>({
    asReducible,
    collector
 })
@@ -103,12 +103,12 @@ export const omEquality = <T>(
 // Augmentation
 // ---------------------------------------------------------------------------
 
-const augmentation: Augmentation<OrderedMap.name, OrderedMap.augmented> =
+const augmentation: Augmentation<OrderedMap.type, OrderedMap.augmented> =
    asReducible
 
 const higherType
-   : Collectible<OrderedMap.name, Named.name>
-   & Transformable<OrderedMap.name>
+   : Collectible<OrderedMap.type, Named.type>
+   & Transformable<OrderedMap.type>
    = {
       asReducible,
       collector,
@@ -116,7 +116,7 @@ const higherType
    }
 
 export const ordmap = augment<
-      OrderedMap.name,
+      OrderedMap.type,
       OrderedMap.augmented,
       typeof higherType
    >(

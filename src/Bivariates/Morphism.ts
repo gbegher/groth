@@ -3,35 +3,37 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Mor<S, T> = $2<Mor.name, S, T>
+   export type Mor<S, T> = $2<Mor.type, S, T>
 
    export namespace Bivariate {
-      export interface Eval<A1, A2> {
-         [Mor.name]: Mor.Type<A1, A2>
+      export interface Register<A1, A2> {
+         [Mor.type]: Mor.Eval<A1, A2>
       }
    }
 
    export namespace Mor {
-      export type Type<S, T> = (s: S) => T
+      export type Eval<S, T> = (s: S) => T
 
-      const name = "Mor"
-      type name = typeof name
+      export const type = "Mor"
+      export type type = typeof type
    }
 
-   export type Identity<S> = $<Identity.name, S>
+   export type Identity<S> = $<Identity.type, S>
+
+   export namespace Identity {
+      export type Eval<S> = S
+
+      export const type = "Identity"
+      export type type = typeof type
+   }
 
    export namespace Generic {
-      export interface Eval<A1> {
-         [Identity.name]: Identity.Type<A1>
+      export interface Register<A1> {
+         [Identity.type]: Identity.Eval<A1>
       }
    }
 
-   export namespace Identity {
-      export type Type<S> = S
 
-      const name = "Identity"
-      type name = typeof name
-   }
 }
 
 // ---------------------------------------------------------------------------
@@ -60,19 +62,19 @@ import {
 // Implementation
 // ---------------------------------------------------------------------------
 
-const map: Functor<Identity.name>["map"] =
+const map: Functor<Identity.type>["map"] =
    fn =>
       fn
 
-const identity: Category<Mor.name>["identity"] =
+const identity: Category<Mor.type>["identity"] =
    () =>
       x => x
 
-const compose: Category<Mor.name>["compose"] =
+const compose: Category<Mor.type>["compose"] =
    (m1, m2) =>
       t1 => m2(m1(t1))
 
-const final: Shapeable<Mor.name>["final"] =
+const final: Shapeable<Mor.type>["final"] =
    () =>
       () => ({})
 
@@ -95,18 +97,18 @@ const merge = <S, T1 extends Product, T2 extends Product>(
             ...m2(s)
          })
 
-const { compound } = compoundFromCategory<Mor.name>({
+const { compound } = compoundFromCategory<Mor.type>({
    merge,
    identity,
    compose
 })
 
-const { incorporate } = incorporateFromCompound<Mor.name>({
+const { incorporate } = incorporateFromCompound<Mor.type>({
    merge,
    compound
 })
 
-const { construct } = constructionFromIncorporate<Mor.name>({
+const { construct } = constructionFromIncorporate<Mor.type>({
    final,
    liftName,
    merge,
@@ -118,12 +120,12 @@ const { construct } = constructionFromIncorporate<Mor.name>({
 // ---------------------------------------------------------------------------
 
 export const morphism
-   : Category<Mor.name>
-   & Functor<Identity.name, Mor.name, Mor.name>
-   & Shapeable<Mor.name>
-   & Compound<Mor.name>
-   & Incorporatable<Mor.name>
-   & Construction<Mor.name>
+   : Category<Mor.type>
+   & Functor<Identity.type, Mor.type, Mor.type>
+   & Shapeable<Mor.type>
+   & Compound<Mor.type>
+   & Incorporatable<Mor.type>
+   & Construction<Mor.type>
    =
       {
          identity,

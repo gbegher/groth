@@ -3,18 +3,18 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Named<S> = $<Named.name, S>
+   export type Named<S> = $<Named.type, S>
 
    export namespace Named {
-      export type Type<T> = [string, T]
+      export type Eval<T> = [string, T]
 
-      export const name = "Named"
-      export type name = typeof name
+      export const type = "Named"
+      export type type = typeof type
    }
 
    export namespace Generic {
-      export interface Eval<A1> {
-         [Named.name]: Named.Type<A1>
+      export interface Register<A1> {
+         [Named.type]: Named.Eval<A1>
       }
    }
 }
@@ -32,7 +32,7 @@ import type {
 // Implementation
 // ---------------------------------------------------------------------------
 
-const map: Functor<Named.name>["map"] =
+const map: Functor<Named.type>["map"] =
    fn =>
       ([k, v]) =>
          [k, fn(v)]
@@ -42,7 +42,7 @@ const map: Functor<Named.name>["map"] =
 // ---------------------------------------------------------------------------
 
 export const named
-   : Functor<Named.name>
+   : Functor<Named.type>
    = {
       map
    }

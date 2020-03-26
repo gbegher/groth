@@ -3,20 +3,38 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Reducible<S> = $<Reducible.name, S>
+   export type Reducible<S> = $<Reducible.type, S>
 
    export namespace Reducible {
-      export type Type<S> = {
+      export type Eval<S> = {
          reduce: <T>(reducer: Reducer<S, T>) => T
       }
 
-      export const name = "Reducible"
-      export type name = typeof name
+      export type Augmentor<T, X> =
+         T extends Generic ?
+         X extends Generic
+            ?
+               {
+                  asReducible: <S>(ts: $<T, S>) => Reducible<$<X, S>>
+               }
+            : never : never
+
+      export const type = "Reducible"
+      export type type = typeof type
+
+      export const augmentor = "Reducible.Augmentor"
+      export type augmentor = typeof augmentor
    }
 
    export namespace Generic {
-      export interface Eval<A1> {
-         [Reducible.name]: Reducible.Type<A1>
+      export interface Register<A1> {
+         [Reducible.type]: Reducible.Eval<A1>
+      }
+   }
+
+   export namespace Bivariate {
+      export interface Register<A1, A2> {
+         [Reducible.augmentor]: Reducible.Augmentor<A1, A2>
       }
    }
 }
@@ -28,7 +46,8 @@ declare module "../index" {
 import type {
    Reducible,
    Mor,
-   Functor
+   Functor,
+   Generic,
 } from ".."
 
 import {
@@ -42,6 +61,13 @@ import {
 export const reduce = <S>(
    { reduce }: Reducible<S>) =>
       reduce
+
+export const asReducible = <
+   T extends Generic,
+   X extends Generic
+   >
+   ({ asReducible }: Reducible.Augmentor<T, X>) =>
+      asReducible
 
 const map = <S, T>
    (fn: Mor<S, T>)
@@ -85,7 +111,7 @@ export const exists = <S>(
 // ---------------------------------------------------------------------------
 
 export const reducible:
-   Functor<Reducible.name, Mor.name, Mor.name> =
+   Functor<Reducible.type, Mor.type, Mor.type> =
       {
          map
       }

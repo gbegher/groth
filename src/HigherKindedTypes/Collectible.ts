@@ -3,26 +3,29 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Collectible<T, X> = $2<Collectible.name, T, X>
+   export type Collectible<
+      T extends Generic,
+      X extends Generic
+      > =
+         $2<Collectible.type, T, X>
 
    export namespace Collectible {
-      export type Type<T, X> =
-         T extends Generic.Type ?
-         X extends Generic.Type
+      export type Eval<T, X> =
+         T extends Generic ?
+         X extends Generic
             ?
-               {
-                  asReducible: <S>(tx: $<T, S>) => Reducible<$<X, S>>
+               Reducible.Augmentor<T, X> & {
                   collector: <S>() => Reducer<$<X, S>, $<T, S>>
                }
             : never : never
 
-      export const name = "Collectible"
-      export type name = typeof name
+      export const type = "Collectible"
+      export type type = typeof type
    }
 
    export namespace Bivariate {
-      export interface Eval<A1, A2> {
-         [Collectible.name]: Collectible.Type<A1, A2>
+      export interface Register<A1, A2> {
+         [Collectible.type]: Collectible.Eval<A1, A2>
       }
    }
 }
@@ -33,24 +36,16 @@ declare module "../index" {
 
 import type {
    Collectible,
-   Generic
+   Generic,
 } from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const asReducible = <
-   T extends Generic.Type,
-   X extends Generic.Type
-   >
-   ({ asReducible }: Collectible<T, X>)
-   : Collectible<T, X>["asReducible"] =>
-      asReducible
-
 export const collector = <
-   T extends Generic.Type,
-   X extends Generic.Type
+   T extends Generic,
+   X extends Generic
    >
    ({ collector }: Collectible<T, X>)
    : Collectible<T, X>["collector"] =>

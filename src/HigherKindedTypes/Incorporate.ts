@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Incorporatable<C extends Bivariate.Type> = {
+   export type Incorporatable<C extends Bivariate> = {
       incorporate: <S, P, T>(
          m1: $2<C, S, P>,
          m2: $2<C, S & P, T>,
@@ -27,7 +27,7 @@ import type {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const incorporate = <C extends Bivariate.Type>(
+export const incorporate = <C extends Bivariate>(
    { incorporate }: Incorporatable<C>)
    : Incorporatable<C>["incorporate"] =>
       incorporate
@@ -36,13 +36,8 @@ export const incorporate = <C extends Bivariate.Type>(
 // Theorems
 // ---------------------------------------------------------------------------
 
-export const incorporateFromCompound = <
-   C extends Bivariate.Type
->(
-   {
-      merge,
-      compound
-   }: Compound<C> & Pick<Shapeable<C>, "merge">)
+export const incorporateFromCompound = <C extends Bivariate>(
+   { merge, compound }: Compound<C> & Pick<Shapeable<C>, "merge">)
    : Incorporatable<C> =>
       ({
          incorporate:

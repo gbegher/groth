@@ -3,21 +3,21 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Reducer<S, T> = $2<Reducer.name, S, T>
+   export type Reducer<S, T> = $2<Reducer.type, S, T>
 
    export namespace Reducer {
-      export type Type<S, T> = {
+      export type Eval<S, T> = {
          init: () => T
          step: (s: S, t: T) => T
       }
 
-      export const name = "Reducer"
-      export type name = typeof name
+      export const type = "Reducer"
+      export type type = typeof type
    }
 
    export namespace Bivariate {
-      export interface Eval<A1, A2> {
-         [Reducer.name]: Reducer.Type<A1, A2>
+      export interface Register<A1, A2> {
+         [Reducer.type]: Reducer.Eval<A1, A2>
       }
    }
 }
@@ -30,17 +30,17 @@ declare module "../index" {
 //    export type EnrichedReducer<S, T> = $2<EnrichedReducer.name, S, T>
 //
 //    export namespace EnrichedReducer {
-//       export type Type<S, T, C extends Bivariate.Type> = {
+//       export type Eval<S, T, C extends Bivariate> = {
 //          init: () => T
 //          step: $2<C, S, $2<C, T, T>>
 //       }
-//       export const name = "EnrichedReducer"
-//       export type name = typeof name
+//       export const type = "EnrichedReducer"
+//       export type type = typeof name
 //    }
 //
 //    export namespace Bivariate {
 //       export interface Eval<A1, A2> {
-//          [EnrichedReducer.name]: EnrichedReducer.Type<A1, A2>
+//          [EnrichedReducer.type]: EnrichedReducer.Eval<A1, A2>
 //       }
 //    }
 // }
@@ -66,7 +66,7 @@ import {
 // Implementation
 // ---------------------------------------------------------------------------
 
-const final: Shapeable<Reducer.name>["final"] = <S>
+const final: Shapeable<Reducer.type>["final"] = <S>
    (): Reducer<S, {}> =>
       ({
          init:
@@ -77,7 +77,7 @@ const final: Shapeable<Reducer.name>["final"] = <S>
                ({})
       })
 
-const liftName: Shapeable<Reducer.name>["liftName"] =
+const liftName: Shapeable<Reducer.type>["liftName"] =
    <K extends string, S extends Product, T>(
       k: K, m: Reducer<S, T>
    ): Reducer<S, Record<K, T>> =>
@@ -88,7 +88,7 @@ const liftName: Shapeable<Reducer.name>["liftName"] =
                ({ [k]: m.step(step, acc) }) as Record<K, T>,
       })
 
-const merge: Shapeable<Reducer.name>["merge"] =
+const merge: Shapeable<Reducer.type>["merge"] =
    (r1, r2) =>
       ({
          init:
@@ -105,7 +105,7 @@ const merge: Shapeable<Reducer.name>["merge"] =
                })
       })
 
-const incorporate: Incorporatable<Reducer.name>["incorporate"] =
+const incorporate: Incorporatable<Reducer.type>["incorporate"] =
    (r1, r2) =>
       {
          const i1 = r1.init()
@@ -135,7 +135,7 @@ const incorporate: Incorporatable<Reducer.name>["incorporate"] =
          })
       }
 
-const { construct } = constructionFromIncorporate<Reducer.name>({
+const { construct } = constructionFromIncorporate<Reducer.type>({
    final,
    liftName,
    merge,
@@ -147,9 +147,9 @@ const { construct } = constructionFromIncorporate<Reducer.name>({
 // ---------------------------------------------------------------------------
 
 export const reducer
-   : Shapeable<Reducer.name>
-   & Incorporatable<Reducer.name>
-   & Construction<Reducer.name>
+   : Shapeable<Reducer.type>
+   & Incorporatable<Reducer.type>
+   & Construction<Reducer.type>
    =
       {
          final,

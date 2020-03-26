@@ -3,13 +3,13 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Array<S> = $<Array.name, S>
+   export type Array<S> = $<Array.type, S>
 
    export namespace Array {
-      export type Type<T> = T[]
+      export type Eval<T> = T[]
 
-      export const name = "Array"
-      export type name = typeof name
+      export const type = "Array"
+      export type type = typeof type
 
       export type AugmentedType<T> =
          Reducible<T>
@@ -19,8 +19,8 @@ declare module "../index" {
    }
 
    export namespace Generic {
-      export interface Eval<A1> {
-         [Array.name]: Array.Type<A1>
+      export interface Register<A1> {
+         [Array.type]: Array.Eval<A1>
          [Array.augmented]: Array.AugmentedType<A1>
       }
    }
@@ -48,7 +48,7 @@ import {
 // Implementation
 // ---------------------------------------------------------------------------
 
-const asReducible: Collectible<Array.name, Identity.name>["asReducible"] =
+const asReducible: Collectible<Array.type, Identity.type>["asReducible"] =
    <S>(array: Array<S>) =>
       ({
          reduce: <T>
@@ -59,7 +59,7 @@ const asReducible: Collectible<Array.name, Identity.name>["asReducible"] =
                   init())
       })
 
-const collector: Collectible<Array.name, Identity.name>["collector"] =
+const collector: Collectible<Array.type, Identity.type>["collector"] =
    <S>() =>
       ({
          init: () => [],
@@ -69,7 +69,7 @@ const collector: Collectible<Array.name, Identity.name>["collector"] =
       }) as Reducer<S, Array<S>>
 
 const { transform } =
-   transformableFromCollectible<Array.name, Identity.name>({
+   transformableFromCollectible<Array.type, Identity.type>({
       asReducible,
       collector
    })
@@ -78,13 +78,13 @@ const { transform } =
 // Augmentation
 // ---------------------------------------------------------------------------
 
-const augmentation: Augmentation<Array.name, Array.augmented> =
+const augmentation: Augmentation<Array.type, Array.augmented> =
    <S>(x: Array<S>) =>
       asReducible(x)
 
 const higherType
-   : Collectible<Array.name, Identity.name>
-   & Transformable<Array.name>
+   : Collectible<Array.type, Identity.type>
+   & Transformable<Array.type>
    = {
       asReducible,
       collector,
@@ -92,7 +92,7 @@ const higherType
    }
 
 export const array = augment<
-      Array.name,
+      Array.type,
       Array.augmented,
       typeof higherType
    >(

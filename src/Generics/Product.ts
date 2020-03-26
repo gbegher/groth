@@ -3,24 +3,25 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Product<T = any> = $<Product.name, T>
+   export type Product<T = any> = $<Product.type, T>
 
    export namespace Product {
-      export type Type<T = any> = Record<string, T>
+      export type Eval<T = any> = Record<string, T>
 
-      export const name = "Product"
-      export type name = typeof name
+      export const type = "Product"
+      export type type = typeof type
 
       export type AugmentedType<T> =
          Reducible<Named<T>>
+         & Mapping<string, T>
 
       export const augmented = "Product.Augmented"
       export type augmented = typeof augmented
    }
 
    export namespace Generic {
-      export interface Eval<A1> {
-         [Product.name]: Product.Type<A1>
+      export interface Register<A1> {
+         [Product.type]: Product.Eval<A1>
          [Product.augmented]: Product.AugmentedType<A1>
       }
    }
@@ -39,25 +40,46 @@ declare module "../index" {
 // Imports
 // ---------------------------------------------------------------------------
 
-import type {
+import {
    Collectible,
    Product,
    Reducer,
    Named,
    Transformable,
-   Augmentation
+   Augmentation,
+   Mapping,
+   Maybe,
 } from ".."
 
 import {
    transformableFromCollectible,
-   augment
-} from ".."
+   augment,
+   some,
+   none,
+} from "../index"
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-const asReducible: Collectible<Product.name, Named.name>["asReducible"] =
+const asMapping = <S>(
+   product: Product<S>)
+   : Mapping<string, S> =>
+      {
+         const has =
+            (s: string)
+            : boolean =>
+               Object.getOwnPropertyNames(product).indexOf(s) != 1
+
+         const get =
+            (s: string)
+            : Maybe<S> =>
+               has(s) ? some<S>(product[s]) : none<S>()
+
+         return { get, has }
+      }
+
+const asReducible: Collectible<Product.type, Named.type>["asReducible"] =
    <S>(product: Product<S>) =>
       ({
          reduce: <T>
@@ -68,7 +90,7 @@ const asReducible: Collectible<Product.name, Named.name>["asReducible"] =
                   init())
       })
 
-const collector: Collectible<Product.name, Named.name>["collector"] =
+const collector: Collectible<Product.type, Named.type>["collector"] =
    <S>() =>
       ({
          init: () => ({}),
@@ -77,7 +99,7 @@ const collector: Collectible<Product.name, Named.name>["collector"] =
                ({ ...acc, [key]: v })
       }) as Reducer<Named<S>, Product<S>>
 
-const { transform } = transformableFromCollectible<Product.name, Named.name>({
+const { transform } = transformableFromCollectible<Product.type, Named.type>({
    asReducible,
    collector
 })
@@ -101,12 +123,15 @@ export const restrictTo = <Y>(
 // Augmentation
 // ---------------------------------------------------------------------------
 
-const augmentation: Augmentation<Product.name, Product.augmented> =
-   asReducible
+const augmentation: Augmentation<Product.type, Product.augmented> =
+   p => ({
+      ...asReducible(p),
+      ...asMapping(p)
+   })
 
 const higherType
-   : Collectible<Product.name, Named.name>
-   & Transformable<Product.name>
+   : Collectible<Product.type, Named.type>
+   & Transformable<Product.type>
    = {
       asReducible,
       collector,
@@ -114,7 +139,7 @@ const higherType
    }
 
 export const product = augment<
-      Product.name,
+      Product.type,
       Product.augmented,
       typeof higherType
    >(

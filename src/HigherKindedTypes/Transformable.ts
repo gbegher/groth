@@ -3,24 +3,24 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Transformable<T extends Generic.Type> = $<Transformable.name, T>
+   export type Transformable<T extends Generic> = $<Transformable.type, T>
 
    export namespace Transformable {
-      export type Type<T> =
-         T extends Generic.Type
+      export type Eval<T> =
+         T extends Generic
             ?
                {
-                  transform: Functor<T, Transducer.name, Mor.name>["map"]
+                  transform: Functor<T, Transducer.type, Mor.type>["map"]
                }
             : never
 
-      export const name = "Transformable"
-      export type name = typeof name
+      export const type = "Transformable"
+      export type type = typeof type
    }
 
    export namespace Generic {
-      export interface Eval<A1> {
-         [Transformable.name]: Transformable.Type<A1>
+      export interface Register<A1> {
+         [Transformable.type]: Transformable.Eval<A1>
       }
    }
 }
@@ -41,13 +41,13 @@ import type {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const transform = <T extends Generic.Type>(
+export const transform = <T extends Generic>(
    { transform }: Transformable<T>)
    : Transformable<T>["transform"] =>
       transform
 
 // maybe extract into apply.ts as apply.transform?
-export const applyTransform = <T extends Generic.Type>(
+export const applyTransform = <T extends Generic>(
    { transform }: Transformable<T>)
    : <X, Y>(tx: $<T, X>, tr: Transducer<X, Y>) => $<T, Y> =>
       (tr, tx) =>
@@ -58,8 +58,8 @@ export const applyTransform = <T extends Generic.Type>(
 // ---------------------------------------------------------------------------
 
 export const transformableFromCollectible = <
-   T extends Generic.Type,
-   X extends Generic.Type
+   T extends Generic,
+   X extends Generic
    >
    ({
       asReducible,
