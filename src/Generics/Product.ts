@@ -3,25 +3,32 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Product<T = any> = $<Product.name, T>
+   export type Product<T = any> = Record<string, T>
 
    export namespace Product {
-      export type Type<T = any> = Record<string, T>
+      export const type = "Product"
+      export type type = typeof type
 
-      export const name = "Product"
-      export type name = typeof name
+      export type HigherType =
+         Functor<Product.type>
+         & Collectible<Product.type, Named.type>
+         & Transformable<Product.type, Named.type>
+         & { mapNamed: Functor<Product.type, Named.cokleisli, Mor.type>["map"] }
 
-      export type AugmentedType<T> =
-         Reducible<Named<T>>
+      export type Augmented<S> =
+         Reducible<Named<S>>
+         & Table<string, S>
+         & { map: <T>(fn: Mor<S, T>) => Product<T> }
+         & { mapNamed: <T>(fn: Mor<Named<S>, T>) => Product<T> }
 
       export const augmented = "Product.Augmented"
       export type augmented = typeof augmented
    }
 
    export namespace Generic {
-      export interface Eval<A1> {
-         [Product.name]: Product.Type<A1>
-         [Product.augmented]: Product.AugmentedType<A1>
+      export interface Register<A1> {
+         [Product.type]: Product<A1>
+         [Product.augmented]: Product.Augmented<A1>
       }
    }
 
@@ -39,25 +46,49 @@ declare module "../index" {
 // Imports
 // ---------------------------------------------------------------------------
 
-import type {
+import {
    Collectible,
    Product,
    Reducer,
    Named,
-   Transformable,
-   Augmentation
+   Augmentation,
+   Table,
+   Maybe,
+   Functor,
+   Mor,
 } from ".."
 
 import {
    transformableFromCollectible,
-   augment
-} from ".."
+   augment,
+   some,
+   none,
+   transducer,
+   named
+} from "../index"
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-const asReducible: Collectible<Product.name, Named.name>["asReducible"] =
+const asTable = <S>(
+   product: Product<S>)
+   : Table<string, S> =>
+      {
+         const has =
+            (s: string)
+            : boolean =>
+               Object.getOwnPropertyNames(product).indexOf(s) != 1
+
+         const get =
+            (s: string)
+            : Maybe<S> =>
+               has(s) ? some<S>(product[s]) : none<S>()
+
+         return { get, has }
+      }
+
+const asReducible: Collectible<Product.type, Named.type>["asReducible"] =
    <S>(product: Product<S>) =>
       ({
          reduce: <T>
@@ -68,7 +99,7 @@ const asReducible: Collectible<Product.name, Named.name>["asReducible"] =
                   init())
       })
 
-const collector: Collectible<Product.name, Named.name>["collector"] =
+const collector: Collectible<Product.type, Named.type>["collector"] =
    <S>() =>
       ({
          init: () => ({}),
@@ -77,10 +108,23 @@ const collector: Collectible<Product.name, Named.name>["collector"] =
                ({ ...acc, [key]: v })
       }) as Reducer<Named<S>, Product<S>>
 
-const { transform } = transformableFromCollectible<Product.name, Named.name>({
+const { transform } = transformableFromCollectible<Product.type, Named.type>({
    asReducible,
    collector
 })
+
+const map: Functor<Product.type>["map"] =
+   mor =>
+      transform(
+         transducer.map(
+            named.map(mor)))
+
+const mapNamed: Product.HigherType["mapNamed"] =
+   mor =>
+      transform(
+         transducer.map(
+            named.lift(mor)))
+
 
 // -----------------------------------------------------------------------
 // Utility
@@ -101,20 +145,26 @@ export const restrictTo = <Y>(
 // Augmentation
 // ---------------------------------------------------------------------------
 
-const augmentation: Augmentation<Product.name, Product.augmented> =
-   asReducible
+const augmentation: Augmentation<Product.type, Product.augmented> =
+   prod => ({
+      ...asReducible(prod),
+      ...asTable(prod),
+      map: fn => map(fn)(prod),
+      mapNamed: fn => mapNamed(fn)(prod),
+   })
 
 const higherType
-   : Collectible<Product.name, Named.name>
-   & Transformable<Product.name>
+   : Product.HigherType
    = {
       asReducible,
       collector,
-      transform
+      transform,
+      map,
+      mapNamed
    }
 
 export const product = augment<
-      Product.name,
+      Product.type,
       Product.augmented,
       typeof higherType
    >(

@@ -3,8 +3,11 @@ import { expect } from "chai"
 
 import {
    Product,
-   product
+   product,
+   Mor,
 } from "../../src"
+
+import { functorTestSuite } from "./TestSuites/FunctorTestSuite"
 
 context("The Array type", () => {
    context("... is a collectible", () => {
@@ -27,5 +30,37 @@ context("The Array type", () => {
             expect(result).to.deep.equal(cs)
          })
       })
+   })
+
+   context("... is a functor", () => {
+      type TestCase = {
+         mor: (n: number) => any
+         input: Product<number>
+         output: Product
+      }
+
+      const testCases: TestCase[] = [
+         {
+            mor: (x: number) => 2 * x,
+            input: {},
+            output: {},
+         },
+         {
+            mor: (x: number) => 2 * x,
+            input: { a: 1, b: 2 },
+            output: { a: 2, b: 4 },
+         },
+         {
+            mor: (x: number) => `2 * ${x}`,
+            input: { a: 1, b: 2 },
+            output: { a: `2 * ${1}`, b: `2 * ${2}` },
+         },
+      ]
+
+      functorTestSuite(
+         product,
+         testCases,
+         { hasAugmentor: true }
+      )
    })
 })

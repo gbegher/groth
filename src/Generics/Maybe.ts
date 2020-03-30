@@ -3,22 +3,20 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Maybe<T> = $<Maybe.name, T>
-
-   export namespace Generic {
-      export interface Eval<A1> {
-         [Maybe.name]: Maybe.Type<A1>
-      }
-   }
+   export type Maybe<T> = Sum<{
+      NONE: undefined
+      SOME: T
+   }>
 
    export namespace Maybe {
-      export type Type<T> = Sum<{
-         NONE: undefined
-         SOME: T
-      }>
+      export const type = "Maybe"
+      export type type = typeof type
+   }
 
-      export const name = "Maybe"
-      export type name = typeof name
+   export namespace Generic {
+      export interface Register<A1> {
+         [Maybe.type]: Maybe<A1>
+      }
    }
 }
 
@@ -80,7 +78,7 @@ export const ifLet = <S, T>
 // ---------------------------------------------------------------------------
 
 export const maybe
-   : Functor<Maybe.name> =
+   : Functor<Maybe.type> =
       {
          map
       }

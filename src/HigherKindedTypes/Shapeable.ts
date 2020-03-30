@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Shapeable<C extends Bivariate.Type> = {
+   export type Shapeable<C extends Bivariate> = {
       final: <S>
          ()
          => $2<C, S, {}>
@@ -40,12 +40,12 @@ import type {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const liftName = <C extends Bivariate.Type>(
+export const liftName = <C extends Bivariate>(
    { liftName }: Shapeable<C>)
    : Shapeable<C>["liftName"] =>
       liftName
 
-export const merge = <C extends Bivariate.Type>(
+export const merge = <C extends Bivariate>(
    { merge }: Shapeable<C>)
    : Shapeable<C>["merge"] =>
       merge

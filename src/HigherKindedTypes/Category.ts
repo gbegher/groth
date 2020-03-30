@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Category<H extends Bivariate.Type> = {
+   export type Category<H extends Bivariate> = {
       identity: <T>() => $2<H, T, T>
       compose: <T1, T2, T3>(h1: $2<H, T1, T2>, h2: $2<H, T2, T3>) => $2<H, T1, T3>
    }
@@ -23,11 +23,11 @@ import type {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const identity = <H extends Bivariate.Type>(
+export const identity = <H extends Bivariate>(
    { identity }: Category<H>) =>
       identity
 
-export const compose = <H extends Bivariate.Type>(
+export const compose = <H extends Bivariate>(
    { compose, identity }: Category<H>) =>
       {
          type C<T1, T2> = $2<H, T1, T2>

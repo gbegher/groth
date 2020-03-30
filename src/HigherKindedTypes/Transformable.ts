@@ -3,24 +3,29 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Transformable<T extends Generic.Type> = $<Transformable.name, T>
+   export type Transformable<
+      T extends Generic,
+      X extends Generic=Identity.type
+   > =
+      $2<Transformable.type, T, X>
 
    export namespace Transformable {
-      export type Type<T> =
-         T extends Generic.Type
+      export type _Transformable<F, X> =
+         F extends Generic ?
+         X extends Generic
             ?
                {
-                  transform: Functor<T, Transducer.name, Mor.name>["map"]
+                  transform: <S, T>(tr: Transducer<$<X, S>, $<X, T>>) => Mor<$<F, S>, $<F, T>>
                }
-            : never
+            : never : never
 
-      export const name = "Transformable"
-      export type name = typeof name
+      export const type = "Transformable"
+      export type type = typeof type
    }
 
-   export namespace Generic {
-      export interface Eval<A1> {
-         [Transformable.name]: Transformable.Type<A1>
+   export namespace Bivariate {
+      export interface Register<A1, A2> {
+         [Transformable.type]: Transformable._Transformable<A1, A2>
       }
    }
 }
@@ -35,43 +40,31 @@ import type {
    Transformable,
    Collectible,
    $,
+   Identity,
 } from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const transform = <T extends Generic.Type>(
-   { transform }: Transformable<T>)
-   : Transformable<T>["transform"] =>
-      transform
-
-// maybe extract into apply.ts as apply.transform?
-export const applyTransform = <T extends Generic.Type>(
-   { transform }: Transformable<T>)
-   : <X, Y>(tx: $<T, X>, tr: Transducer<X, Y>) => $<T, Y> =>
-      (tr, tx) =>
-         transform(tr)(tx)
-
 // ---------------------------------------------------------------------------
 // Theorems
 // ---------------------------------------------------------------------------
 
 export const transformableFromCollectible = <
-   T extends Generic.Type,
-   X extends Generic.Type
+   F extends Generic,
+   X extends Generic
    >
    ({
       asReducible,
       collector
-   }: Collectible<T, X>)
-   : Transformable<T> =>
+   }: Collectible<F, X>)
+   : Transformable<F, X> =>
       ({
          transform:
-            tr =>
-               tx =>
-                  asReducible(tx)
+            <S, T>(tr: Transducer<$<X, S>, $<X, T>>) =>
+               (fs: $<F, S>) =>
+                  asReducible<S>(fs)
                      .reduce(
                         tr(collector()))
-      }) as Transformable<T>
-
+      }) as Transformable<F, X>

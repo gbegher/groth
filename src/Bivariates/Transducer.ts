@@ -3,24 +3,22 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Transducer<S, T> = $2<Transducer.name, S, T>
+   export type Transducer<S, T> = <A>(reducer: Reducer<T, A>) => Reducer<S, A>
 
    export namespace Transducer {
-      export type Type<S, T> = <A>(reducer: Reducer<T, A>) => Reducer<S, A>
-
-      export const name = "Transducer"
-      export type name = typeof name
+      export const type = "Transducer"
+      export type type = typeof type
    }
 
    export namespace Bivariate {
-      export interface Eval<A1, A2> {
-         [Transducer.name]: Transducer.Type<A1, A2>
+      export interface Register<A1, A2> {
+         [Transducer.type]: Transducer<A1, A2>
       }
    }
 }
 
 // ---------------------------------------------------------------------------
-// Implementation
+// Imports
 // ---------------------------------------------------------------------------
 
 import type {
@@ -45,13 +43,13 @@ import {
  } from ".."
 
 // ---------------------------------------------------------------------------
-// Imports
+// Implementation
 // ---------------------------------------------------------------------------
 
-const identity: Category<Transducer.name>["identity"] =
+const identity: Category<Transducer.type>["identity"] =
    () => tr => tr
 
-const compose: Category<Transducer.name>["compose"] =
+const compose: Category<Transducer.type>["compose"] =
    (tr1, tr2) =>
       red => tr1(tr2(red))
 
@@ -64,12 +62,12 @@ const map = <S, T>(
             step: (s: S, acc: A) => red.step(mor(s), acc)
          })
 
-const final: Shapeable<Transducer.name>["final"] = <S>(): Transducer<S, {}> =>
+const final: Shapeable<Transducer.type>["final"] = <S>(): Transducer<S, {}> =>
       // Think of this as a constant endomorphism on the accumulator,
       // applied at every step
       map(() => ({}))
 
-const liftName: Shapeable<Transducer.name>["liftName"] = <
+const liftName: Shapeable<Transducer.type>["liftName"] = <
    K extends string, S, T
    >(
       k: K,
@@ -128,18 +126,18 @@ export const filter = <S>(
             step: (s: S, acc: A) => pred(s) ? red.step(s, acc) : acc
          })
 
-const { compound } = compoundFromCategory<Transducer.name>({
+const { compound } = compoundFromCategory<Transducer.type>({
    identity,
    compose,
    merge
 })
 
-const { incorporate } = incorporateFromCompound<Transducer.name>({
+const { incorporate } = incorporateFromCompound<Transducer.type>({
    merge,
    compound
 })
 
-const { construct } = constructionFromIncorporate<Transducer.name>({
+const { construct } = constructionFromIncorporate<Transducer.type>({
    final,
    liftName,
    merge,
@@ -151,12 +149,12 @@ const { construct } = constructionFromIncorporate<Transducer.name>({
 // ---------------------------------------------------------------------------
 
 export const transducer
-   : Category<Transducer.name>
-   & Shapeable<Transducer.name>
-   & Compound<Transducer.name>
-   & Incorporatable<Transducer.name>
-   & Construction<Transducer.name>
-   & Functor<Identity.name, Mor.name, Transducer.name>
+   : Category<Transducer.type>
+   & Shapeable<Transducer.type>
+   & Compound<Transducer.type>
+   & Incorporatable<Transducer.type>
+   & Construction<Transducer.type>
+   & Functor<Identity.type, Mor.type, Transducer.type>
    =
       {
          identity,

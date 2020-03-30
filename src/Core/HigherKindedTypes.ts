@@ -3,36 +3,34 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
+   export type Generic = keyof Generic.Register<any>
+
    export namespace Generic {
-      export interface Eval<A1> {
+      export interface Register<A1> {
          [k: string]: any
       }
 
-      export type Type =
-         keyof Eval<any>
-
-      export type $<H extends Type, A1> =
-         Eval<A1>[H]
+      export type $<H extends Generic, A1> =
+         Register<A1>[H]
    }
+
+   export type Bivariate = keyof Bivariate.Register<any, any>
 
    export namespace Bivariate {
-      export interface Eval<A1, A2> {
+      export interface Register<A1, A2> {
          [k: string]: any
       }
 
-      export type Type =
-         keyof Eval<any, any>
-
-      export type $<H extends Type, A1, A2> =
-         Eval<A1, A2>[H]
+      export type $2<H extends Bivariate, A1, A2> =
+         Register<A1, A2>[H]
    }
 
-   export type $<H extends Generic.Type, T1> = Generic.$<H, T1>
-   export type $2<H extends Bivariate.Type, T1, T2> = Bivariate.$<H, T1, T2>
+   export type $<H extends Generic, T1> = Generic.$<H, T1>
+   export type $2<H extends Bivariate, T1, T2> = Bivariate.$2<H, T1, T2>
 }
 
 // ---------------------------------------------------------------------------
 // Imports
 // ---------------------------------------------------------------------------
 
-import type {} from ".."
+import type { Product, Mor } from ".."

@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Construction<C extends Bivariate.Type> =
+   export type Construction<C extends Bivariate> =
          __Construction.Spread<C> &
          __Construction.C0<C> &
          __Construction.C1<C> &
@@ -15,15 +15,15 @@ declare module "../index" {
          __Construction.C7<C>
 
    export namespace __Construction {
-      export type Spread<C extends Bivariate.Type> = {
+      export type Spread<C extends Bivariate> = {
          construct: <S extends Product>(...args: [string, $2<C, S & Product, Product>][]) => $2<C, S, Product>
       }
 
-      export type C0<C extends Bivariate.Type> = {
+      export type C0<C extends Bivariate> = {
          construct: <S extends Product>() => $2<C, S, {}>
       }
 
-      export type C1<C extends Bivariate.Type> = {
+      export type C1<C extends Bivariate> = {
          construct: <S extends Product,
                K1 extends string, T1
                >
@@ -34,7 +34,7 @@ declare module "../index" {
             => $2<C, S, Expand<Record<K1, T1>>>
       }
 
-      export type C2<C extends Bivariate.Type> = {
+      export type C2<C extends Bivariate> = {
          construct: <S extends Product,
                K1 extends string, T1,
                K2 extends string, T2
@@ -53,7 +53,7 @@ declare module "../index" {
                >>
       }
 
-      export type C3<C extends Bivariate.Type> = {
+      export type C3<C extends Bivariate> = {
          construct: <S extends Product,
                K1 extends string, T1,
                K2 extends string, T2,
@@ -79,7 +79,7 @@ declare module "../index" {
                >>
       }
 
-      export type C4<C extends Bivariate.Type> = {
+      export type C4<C extends Bivariate> = {
          construct: <S extends Product,
                K1 extends string, T1,
                K2 extends string, T2,
@@ -110,7 +110,7 @@ declare module "../index" {
                >>
       }
 
-      export type C5<C extends Bivariate.Type> = {
+      export type C5<C extends Bivariate> = {
          construct: <S extends Product,
                K1 extends string, T1,
                K2 extends string, T2,
@@ -152,7 +152,7 @@ declare module "../index" {
                >>
       }
 
-      export type C6<C extends Bivariate.Type> = {
+      export type C6<C extends Bivariate> = {
          construct: <S extends Product,
                K1 extends string, T1,
                K2 extends string, T2,
@@ -206,7 +206,7 @@ declare module "../index" {
                >>
       }
 
-      export type C7<C extends Bivariate.Type> = {
+      export type C7<C extends Bivariate> = {
          construct: <S extends Product,
                K1 extends string, T1,
                K2 extends string, T2,
@@ -298,7 +298,7 @@ import {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const construct = <C extends Bivariate.Type>(
+export const construct = <C extends Bivariate>(
    { construct }: Construction<C>)
    : Construction<C>["construct"] =>
       construct
@@ -308,7 +308,7 @@ export const construct = <C extends Bivariate.Type>(
 // ---------------------------------------------------------------------------
 
 export const constructionFromIncorporate = <
-   C extends Bivariate.Type
+   C extends Bivariate
 >(
    {
       incorporate,

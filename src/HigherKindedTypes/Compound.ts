@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Compound<C extends Bivariate.Type> = {
+   export type Compound<C extends Bivariate> = {
       compound: <S, P, T>(
          m1: $2<C, S, P>,
          m2: $2<C, S & P, T>,
@@ -27,7 +27,7 @@ import type {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const compound = <C extends Bivariate.Type>(
+export const compound = <C extends Bivariate>(
    { compound }: Compound<C>)
    : Compound<C>["compound"] =>
       compound
@@ -37,7 +37,7 @@ export const compound = <C extends Bivariate.Type>(
 // ---------------------------------------------------------------------------
 
 export const compoundFromCategory = <
-   C extends Bivariate.Type
+   C extends Bivariate
 >(
    {
       identity,
