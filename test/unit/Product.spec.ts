@@ -4,8 +4,10 @@ import { expect } from "chai"
 import {
    Product,
    product,
-   map
+   Mor,
 } from "../../src"
+
+import { functorTestSuite } from "./TestSuites/FunctorTestSuite"
 
 context("The Array type", () => {
    context("... is a collectible", () => {
@@ -55,14 +57,10 @@ context("The Array type", () => {
          },
       ]
 
-      context("via the generic `map`", () => {
-         testCases.forEach(({mor, input, output}) => {
-            it("should map as expected", () => {
-               const result = map(product)(mor)(input)
-
-               expect(result).to.deep.equal(output)
-            })
-         })
-      })
+      functorTestSuite(
+         product,
+         testCases,
+         { hasAugmentor: true }
+      )
    })
 })

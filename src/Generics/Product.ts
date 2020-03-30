@@ -12,13 +12,14 @@ declare module "../index" {
       export type HigherType =
          Functor<Product.type>
          & Collectible<Product.type, Named.type>
-         & Transformable<Product.type>
-         // & { mapNamed: Functor<Product.type, Named.cokleisli, Mor.type> }
-         // & { transformNamed: <S, T>(tr: Transducer<Named<S>, T>) => Mor<Product<S>, Product<T>>}
+         & Transformable<Product.type, Named.type>
+         & { mapNamed: Functor<Product.type, Named.cokleisli, Mor.type>["map"] }
 
-      export type AugmentedType<T> =
-         Reducible<Named<T>>
-         & Table<string, T>
+      export type Augmented<S> =
+         Reducible<Named<S>>
+         & Table<string, S>
+         & { map: <T>(fn: Mor<S, T>) => Product<T> }
+         & { mapNamed: <T>(fn: Mor<Named<S>, T>) => Product<T> }
 
       export const augmented = "Product.Augmented"
       export type augmented = typeof augmented
@@ -27,7 +28,7 @@ declare module "../index" {
    export namespace Generic {
       export interface Register<A1> {
          [Product.type]: Product<A1>
-         [Product.augmented]: Product.AugmentedType<A1>
+         [Product.augmented]: Product.Augmented<A1>
       }
    }
 
@@ -55,8 +56,6 @@ import {
    Maybe,
    Functor,
    Mor,
-   Transducer,
-   $2,
 } from ".."
 
 import {
@@ -65,7 +64,7 @@ import {
    some,
    none,
    transducer,
-   map as fmap
+   named
 } from "../index"
 
 // ---------------------------------------------------------------------------
@@ -114,24 +113,17 @@ const { transform } = transformableFromCollectible<Product.type, Named.type>({
    collector
 })
 
-const trmapNamed = <S, T>(
-   fn: $2<Named.cokleisli, S, T>)
-   : Transducer<Named<S>, Named<T>> =>
-      ({ init, step }) =>
-         ({
-            init,
-            step:
-               ([n, s], a) =>
-                  step([n, fn([n, s])], a)
-         })
-
-
 const map: Functor<Product.type>["map"] =
    mor =>
-      transform(transducer.map(mor))
+      transform(
+         transducer.map(
+            named.map(mor)))
 
-// const mapNamed: Functor<Product.type, Named.cokleisli, Mor.type>["map"] =
-//    mor => transform(trmapNamed(mor))
+const mapNamed: Product.HigherType["mapNamed"] =
+   mor =>
+      transform(
+         transducer.map(
+            named.lift(mor)))
 
 
 // -----------------------------------------------------------------------
@@ -154,9 +146,11 @@ export const restrictTo = <Y>(
 // ---------------------------------------------------------------------------
 
 const augmentation: Augmentation<Product.type, Product.augmented> =
-   p => ({
-      ...asReducible(p),
-      ...asTable(p)
+   prod => ({
+      ...asReducible(prod),
+      ...asTable(prod),
+      map: fn => map(fn)(prod),
+      mapNamed: fn => mapNamed(fn)(prod),
    })
 
 const higherType
@@ -166,7 +160,7 @@ const higherType
       collector,
       transform,
       map,
-      // mapNamed,
+      mapNamed
    }
 
 export const product = augment<

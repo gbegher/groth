@@ -5,12 +5,16 @@
 declare module "../index" {
    export type Named<T> = [string, T]
 
-   // Named is a comonad: [n, t] => t and [n, t] => [n , [n, t]]
    export type CoKleisliNamed<A, B> = Mor<Named<A>, B>
 
    export namespace Named {
       export const type = "Named"
       export type type = typeof type
+
+      export type HigherType =
+         Functor<Named.type>
+         & Category<Named.cokleisli>
+         & { lift: Functor<Named.type, Named.cokleisli, Mor.type>["map"] }
 
       export const cokleisli = "CoKleisli"
       export type cokleisli = typeof cokleisli
@@ -48,6 +52,12 @@ const map: Functor<Named.type>["map"] =
       ([k, v]) =>
          [k, fn(v)]
 
+// Todo: Move type to CoMonad.ts
+const lift: Named.HigherType["lift"] =
+   fn =>
+      ([k, v]) =>
+         [k, fn([k, v])]
+
 const identity: Category<Named.cokleisli>["identity"] =
    () =>
       ([_, t]) =>
@@ -62,11 +72,10 @@ const compose: Category<Named.cokleisli>["compose"] =
 // Augmentation
 // ---------------------------------------------------------------------------
 
-export const named
-   : Functor<Named.type>
-   & Category<Named.cokleisli>
+export const named: Named.HigherType
    = {
       map,
       identity,
       compose,
+      lift
    }

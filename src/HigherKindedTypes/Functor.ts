@@ -11,6 +11,19 @@ declare module "../index" {
       {
          map: <S, T>(mor: $2<C1, S, T>) => $2<C2, $<F, S>, $<F, T>>
       }
+
+   export namespace Functor {
+      export type Augmentor<
+         F extends Generic,
+         C1 extends Bivariate = Mor.type
+      > =
+         <S>(fs: $<F, S>) =>
+            {
+               map: <T>(mor: $2<C1, S, T>) => $<F, T>
+            }
+   }
+
+
 }
 
 // ---------------------------------------------------------------------------

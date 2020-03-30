@@ -12,6 +12,7 @@ declare module "../index" {
       export type HigherType =
          Collectible<Array.type, Identity.type>
          & Transformable<Array.type>
+         & Functor<Array.type>
 
       export type AugmentedType<T> =
          Reducible<T>
@@ -37,14 +38,15 @@ import type {
    Identity,
    Collectible,
    Reducer,
-   Transformable,
-   Augmentation
+   Augmentation,
+   Functor,
 } from ".."
 
 import {
    transformableFromCollectible,
    augment
 } from ".."
+import { transducer } from "../Bivariates/Transducer"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -76,6 +78,11 @@ const { transform } =
       collector
    })
 
+const map: Functor<Array.type>["map"] =
+   mor =>
+      transform(transducer.map(mor))
+
+
 // ---------------------------------------------------------------------------
 // Augmentation
 // ---------------------------------------------------------------------------
@@ -85,12 +92,12 @@ const augmentation: Augmentation<Array.type, Array.augmented> =
       asReducible(x)
 
 const higherType
-   : Collectible<Array.type, Identity.type>
-   & Transformable<Array.type>
+   : Array.HigherType
    = {
       asReducible,
       collector,
       transform,
+      map
    }
 
 export const array = augment<
