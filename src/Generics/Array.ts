@@ -3,13 +3,15 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Array<S> = $<Array.type, S>
+   export type Array<S> = S[]
 
    export namespace Array {
-      export type Eval<T> = T[]
-
       export const type = "Array"
       export type type = typeof type
+
+      export type HigherType =
+         Collectible<Array.type, Identity.type>
+         & Transformable<Array.type>
 
       export type AugmentedType<T> =
          Reducible<T>
@@ -20,7 +22,7 @@ declare module "../index" {
 
    export namespace Generic {
       export interface Register<A1> {
-         [Array.type]: Array.Eval<A1>
+         [Array.type]: Array<A1>
          [Array.augmented]: Array.AugmentedType<A1>
       }
    }

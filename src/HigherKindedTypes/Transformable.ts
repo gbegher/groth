@@ -6,11 +6,11 @@ declare module "../index" {
    export type Transformable<T extends Generic> = $<Transformable.type, T>
 
    export namespace Transformable {
-      export type Eval<T> =
-         T extends Generic
+      export type _Transformable<F> =
+         F extends Generic
             ?
                {
-                  transform: Functor<T, Transducer.type, Mor.type>["map"]
+                  transform: Functor<F, Transducer.type, Mor.type>["map"]
                }
             : never
 
@@ -20,7 +20,7 @@ declare module "../index" {
 
    export namespace Generic {
       export interface Register<A1> {
-         [Transformable.type]: Transformable.Eval<A1>
+         [Transformable.type]: Transformable._Transformable<A1>
       }
    }
 }
@@ -75,3 +75,16 @@ export const transformableFromCollectible = <
                         tr(collector()))
       }) as Transformable<T>
 
+const ttt = <
+   F extends Generic,
+   X extends Generic
+   >
+   ({
+      asReducible,
+      collector
+   }: Collectible<F, X>) =>
+      <S, T>(tr: Transducer<$<X, S>, $<X,T>>) =>
+         (fs: $<F, S>) =>
+            asReducible<S>(fs)
+               .reduce(
+                  tr(collector()))

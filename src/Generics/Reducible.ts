@@ -3,19 +3,17 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Reducible<S> = $<Reducible.type, S>
+   export type Reducible<S> = {
+      reduce: <T>(reducer: Reducer<S, T>) => T
+   }
 
    export namespace Reducible {
-      export type Eval<S> = {
-         reduce: <T>(reducer: Reducer<S, T>) => T
-      }
-
-      export type Augmentor<T, X> =
-         T extends Generic ?
+      export type Augmentor<F, X> =
+         F extends Generic ?
          X extends Generic
             ?
                {
-                  asReducible: <S>(ts: $<T, S>) => Reducible<$<X, S>>
+                  asReducible: <S>(fs: $<F, S>) => Reducible<$<X, S>>
                }
             : never : never
 
@@ -28,7 +26,7 @@ declare module "../index" {
 
    export namespace Generic {
       export interface Register<A1> {
-         [Reducible.type]: Reducible.Eval<A1>
+         [Reducible.type]: Reducible<A1>
       }
    }
 

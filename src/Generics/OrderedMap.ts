@@ -3,14 +3,12 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type OrderedMap<S> = $<OrderedMap.type, S>
-
-   export namespace OrderedMap {
-      export type Eval<T> = {
+   export type OrderedMap<T> = {
          index: string[]
          values: Product<T>
       }
 
+   export namespace OrderedMap {
       export const type = "OrderedMap"
       export type type = typeof type
 
@@ -23,7 +21,7 @@ declare module "../index" {
 
    export namespace Generic {
       export interface Register<A1> {
-         [OrderedMap.type]: OrderedMap.Eval<A1>
+         [OrderedMap.type]: OrderedMap<A1>
          [OrderedMap.augmented]: OrderedMap.AugmentedType<A1>
       }
    }

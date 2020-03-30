@@ -3,31 +3,28 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Mapping<K, T> = $2<Mapping.type, K, T>
+   export type Table<K, T> = {
+      has: (key: K) => boolean
+      get: (key: K) => Maybe<T>
+   }
 
-   export namespace Mapping {
-      export type Eval<K, T> = {
-         has: (key: K) => boolean
-         // Todo: Refactor as Kleisli<Maybe, K, T>
-         get: (key: K) => Maybe<T>
-      }
-
+   export namespace Table {
       export type Augmentor<K, T> =
          T extends Generic
-            ? { asMapping: <S>(t: $<T, S>) => Mapping<K, S> }
+            ? { asTable: <S>(t: $<T, S>) => Table<K, S> }
             : never
 
-      export const type = "Mapping"
+      export const type = "Table"
       export type type = typeof type
 
-      export const augmentor = "Mapping.Augmentor"
+      export const augmentor = "Table.Augmentor"
       export type augmentor = typeof augmentor
    }
 
    export namespace Bivariate {
       export interface Register<A1, A2> {
-         [Mapping.type]: Mapping.Eval<A1, A2>
-         [Mapping.augmentor]: Mapping.Augmentor<A1, A2>
+         [Table.type]: Table<A1, A2>
+         [Table.augmentor]: Table.Augmentor<A1, A2>
       }
    }
 
@@ -39,7 +36,7 @@ declare module "../index" {
 // ---------------------------------------------------------------------------
 
 import type {
-   Mapping,
+   Table,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -47,16 +44,16 @@ import type {
 // ---------------------------------------------------------------------------
 
 export const has = <K, T>
-   ({ has }: Mapping<K, T>) =>
+   ({ has }: Table<K, T>) =>
       has
 
 export const get = <K, T>
-   ({ get }: Mapping<K, T>) =>
+   ({ get }: Table<K, T>) =>
       get
 
-export const asMapping = <K, T>
-   ({ asMapping }: Mapping.Augmentor<K, T>) =>
-      asMapping
+export const asTable = <K, T>
+   ({ asTable }: Table.Augmentor<K, T>) =>
+      asTable
 
 // ---------------------------------------------------------------------------
 // Augmentation

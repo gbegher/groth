@@ -3,22 +3,20 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Maybe<T> = $<Maybe.type, T>
+   export type Maybe<T> = Sum<{
+      NONE: undefined
+      SOME: T
+   }>
+
+   export namespace Maybe {
+      export const type = "Maybe"
+      export type type = typeof type
+   }
 
    export namespace Generic {
       export interface Register<A1> {
-         [Maybe.type]: Maybe.Eval<A1>
+         [Maybe.type]: Maybe<A1>
       }
-   }
-
-   export namespace Maybe {
-      export type Eval<T> = Sum<{
-         NONE: undefined
-         SOME: T
-      }>
-
-      export const type = "Maybe"
-      export type type = typeof type
    }
 }
 

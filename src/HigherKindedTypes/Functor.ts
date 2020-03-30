@@ -3,9 +3,14 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Functor<F extends Generic, C1 extends Bivariate = Mor.type, C2 extends Bivariate = Mor.type> = {
-      map: <S, T>(mor: $2<C1, S, T>) => $2<C2, $<F, S>, $<F, T>>
-   }
+   export type Functor<
+      F extends Generic,
+      C1 extends Bivariate = Mor.type,
+      C2 extends Bivariate = Mor.type
+   > =
+      {
+         map: <S, T>(mor: $2<C1, S, T>) => $2<C2, $<F, S>, $<F, T>>
+      }
 }
 
 // ---------------------------------------------------------------------------
@@ -16,7 +21,7 @@ import type {
    Functor,
    Generic,
    Mor,
-   Bivariate
+   Bivariate,
 } from ".."
 
 // ---------------------------------------------------------------------------

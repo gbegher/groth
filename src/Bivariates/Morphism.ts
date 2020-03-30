@@ -3,33 +3,29 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Mor<S, T> = $2<Mor.type, S, T>
-
-   export namespace Bivariate {
-      export interface Register<A1, A2> {
-         [Mor.type]: Mor.Eval<A1, A2>
-      }
-   }
+   export type Mor<S, T> = (s: S) => T
 
    export namespace Mor {
-      export type Eval<S, T> = (s: S) => T
-
       export const type = "Mor"
       export type type = typeof type
    }
 
-   export type Identity<S> = $<Identity.type, S>
+   export namespace Bivariate {
+      export interface Register<A1, A2> {
+         [Mor.type]: Mor<A1, A2>
+      }
+   }
+
+   export type Identity<S> = S
 
    export namespace Identity {
-      export type Eval<S> = S
-
       export const type = "Identity"
       export type type = typeof type
    }
 
    export namespace Generic {
       export interface Register<A1> {
-         [Identity.type]: Identity.Eval<A1>
+         [Identity.type]: Identity<A1>
       }
    }
 

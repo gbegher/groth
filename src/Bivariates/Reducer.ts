@@ -3,21 +3,19 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Reducer<S, T> = $2<Reducer.type, S, T>
+   export type Reducer<S, T> = {
+      init: () => T
+      step: (s: S, t: T) => T
+   }
 
    export namespace Reducer {
-      export type Eval<S, T> = {
-         init: () => T
-         step: (s: S, t: T) => T
-      }
-
       export const type = "Reducer"
       export type type = typeof type
    }
 
    export namespace Bivariate {
       export interface Register<A1, A2> {
-         [Reducer.type]: Reducer.Eval<A1, A2>
+         [Reducer.type]: Reducer<A1, A2>
       }
    }
 }

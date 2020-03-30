@@ -3,17 +3,22 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Product<T = any> = $<Product.type, T>
+   export type Product<T = any> = Record<string, T>
 
    export namespace Product {
-      export type Eval<T = any> = Record<string, T>
-
       export const type = "Product"
       export type type = typeof type
 
+      export type HigherType =
+         Functor<Product.type>
+         & Collectible<Product.type, Named.type>
+         & Transformable<Product.type>
+         // & { mapNamed: Functor<Product.type, Named.cokleisli, Mor.type> }
+         // & { transformNamed: <S, T>(tr: Transducer<Named<S>, T>) => Mor<Product<S>, Product<T>>}
+
       export type AugmentedType<T> =
          Reducible<Named<T>>
-         & Mapping<string, T>
+         & Table<string, T>
 
       export const augmented = "Product.Augmented"
       export type augmented = typeof augmented
@@ -21,7 +26,7 @@ declare module "../index" {
 
    export namespace Generic {
       export interface Register<A1> {
-         [Product.type]: Product.Eval<A1>
+         [Product.type]: Product<A1>
          [Product.augmented]: Product.AugmentedType<A1>
       }
    }
@@ -45,10 +50,13 @@ import {
    Product,
    Reducer,
    Named,
-   Transformable,
    Augmentation,
-   Mapping,
+   Table,
    Maybe,
+   Functor,
+   Mor,
+   Transducer,
+   $2,
 } from ".."
 
 import {
@@ -56,15 +64,17 @@ import {
    augment,
    some,
    none,
+   transducer,
+   map as fmap
 } from "../index"
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-const asMapping = <S>(
+const asTable = <S>(
    product: Product<S>)
-   : Mapping<string, S> =>
+   : Table<string, S> =>
       {
          const has =
             (s: string)
@@ -104,6 +114,26 @@ const { transform } = transformableFromCollectible<Product.type, Named.type>({
    collector
 })
 
+const trmapNamed = <S, T>(
+   fn: $2<Named.cokleisli, S, T>)
+   : Transducer<Named<S>, Named<T>> =>
+      ({ init, step }) =>
+         ({
+            init,
+            step:
+               ([n, s], a) =>
+                  step([n, fn([n, s])], a)
+         })
+
+
+const map: Functor<Product.type>["map"] =
+   mor =>
+      transform(transducer.map(mor))
+
+// const mapNamed: Functor<Product.type, Named.cokleisli, Mor.type>["map"] =
+//    mor => transform(trmapNamed(mor))
+
+
 // -----------------------------------------------------------------------
 // Utility
 
@@ -126,16 +156,17 @@ export const restrictTo = <Y>(
 const augmentation: Augmentation<Product.type, Product.augmented> =
    p => ({
       ...asReducible(p),
-      ...asMapping(p)
+      ...asTable(p)
    })
 
 const higherType
-   : Collectible<Product.type, Named.type>
-   & Transformable<Product.type>
+   : Product.HigherType
    = {
       asReducible,
       collector,
-      transform
+      transform,
+      map,
+      // mapNamed,
    }
 
 export const product = augment<

@@ -10,7 +10,7 @@ declare module "../index" {
          $2<Collectible.type, T, X>
 
    export namespace Collectible {
-      export type Eval<T, X> =
+      export type _Collectible<T, X> =
          T extends Generic ?
          X extends Generic
             ?
@@ -25,7 +25,7 @@ declare module "../index" {
 
    export namespace Bivariate {
       export interface Register<A1, A2> {
-         [Collectible.type]: Collectible.Eval<A1, A2>
+         [Collectible.type]: Collectible._Collectible<A1, A2>
       }
    }
 }
