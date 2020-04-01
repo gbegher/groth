@@ -29,7 +29,11 @@ declare module "../index" {
       }
    }
 
+   export type Dom<M extends Mor<any, any>> =
+      M extends Mor<any, infer T> ? T : never
 
+   export type CoDom<M extends Mor<any, any>> =
+      M extends Mor<infer S, any> ? S : never
 }
 
 // ---------------------------------------------------------------------------
