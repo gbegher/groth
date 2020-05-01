@@ -49,13 +49,18 @@ import type {
    Identity,
    Compound,
    Incorporatable,
-   Construction
+   Construction,
+   Extendable,
+   exclude,
+   Demergable
 } from ".."
 
 import {
    compoundFromCategory,
    incorporateFromCompound,
-   constructionFromIncorporate,
+   constructionFromExtendable,
+   completeExtendable,
+   llog,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -97,6 +102,42 @@ const merge = <S, T1 extends Product, T2 extends Product>(
             ...m2(s)
          })
 
+const demerge: Demergable<Mor.type>["demerge"] =
+   mor =>
+      ([s, p]) =>
+         mor({ ...s, ...p })
+
+const { extend }: Extendable<Mor.type> =
+   completeExtendable(
+      <S, P extends Product>(base: Mor<S, P>) => <K extends string, T>(
+         [key, ext]: [exclude<K, keyof P>, Mor<[S, P], T>]) =>
+            (s: S) =>
+               {
+                  const p: P = base(s)
+
+                  return {
+                     ...p,
+                     [key]: ext([s, p])
+                  } as P & Record<K, T>
+
+                  /*
+
+                  =
+                     compose(
+                        pairing(id_S,base),
+                        diag_[S, P], // = pairing(id, id)
+                        parallel(
+                           second,
+                           liftName(k, ext)
+                        ),
+                        (p, kt) => ...kt
+                     )
+
+                  */
+
+               }
+   )
+
 const { compound } = compoundFromCategory<Mor.type>({
    merge,
    identity,
@@ -108,11 +149,10 @@ const { incorporate } = incorporateFromCompound<Mor.type>({
    compound
 })
 
-const { construct } = constructionFromIncorporate<Mor.type>({
+const { construct } = constructionFromExtendable<Mor.type>({
+   extend,
    final,
-   liftName,
-   merge,
-   incorporate
+   demerge
 })
 
 // ---------------------------------------------------------------------------
@@ -125,6 +165,7 @@ export const morphism
    & Shapeable<Mor.type>
    & Compound<Mor.type>
    & Incorporatable<Mor.type>
+   & Demergable<Mor.type>
    & Construction<Mor.type>
    =
       {
@@ -136,5 +177,6 @@ export const morphism
          merge,
          compound,
          incorporate,
+         demerge,
          construct
       }

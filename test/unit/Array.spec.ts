@@ -4,8 +4,8 @@ import { expect } from "chai"
 import {
    Array,
    array,
-   map
 } from "../../src"
+
 import { functorTestSuite } from "./TestSuites/FunctorTestSuite"
 
 context("The Array type", () => {
@@ -53,7 +53,7 @@ context("The Array type", () => {
       functorTestSuite(
          array,
          testCases,
-         { hasAugmentor: false }
+         { hasAugmentor: true }
       )
    })
 })

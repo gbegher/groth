@@ -89,7 +89,7 @@ export const forall = <S>(
    red.reduce({
       init: () => true as boolean,
       step:
-         (s, acc) =>
+         s => acc =>
             acc && pred(s)
    })
 
@@ -100,7 +100,7 @@ export const exists = <S>(
    red.reduce({
       init: () => false as boolean,
       step:
-         (s, acc) =>
+         s => acc =>
             acc || pred(s)
    })
 

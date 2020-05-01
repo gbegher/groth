@@ -3,9 +3,9 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Reducer<S, T> = {
-      init: () => T
-      step: (s: S, t: T) => T
+   export type Reducer<S, A> = {
+      init: () => A
+      step: (s: S) => Mor<A, A>
    }
 
    export namespace Reducer {
@@ -20,29 +20,6 @@ declare module "../index" {
    }
 }
 
-// Can we make this possible in TS?
-// Most of the constructions on reducers should still work
-// (if C is shapable, a category, etc...)
-//
-// declare module "./index" {
-//    export type EnrichedReducer<S, T> = $2<EnrichedReducer.name, S, T>
-//
-//    export namespace EnrichedReducer {
-//       export type Eval<S, T, C extends Bivariate> = {
-//          init: () => T
-//          step: $2<C, S, $2<C, T, T>>
-//       }
-//       export const type = "EnrichedReducer"
-//       export type type = typeof name
-//    }
-//
-//    export namespace Bivariate {
-//       export interface Eval<A1, A2> {
-//          [EnrichedReducer.type]: EnrichedReducer.Eval<A1, A2>
-//       }
-//    }
-// }
-
 // ---------------------------------------------------------------------------
 // Imports
 // ---------------------------------------------------------------------------
@@ -52,13 +29,17 @@ import type {
    Reducer,
    Product,
    Incorporatable,
-   Construction
+   Construction,
+   Extendable,
+   exclude,
+   Demergable,
 } from ".."
 
 import {
    restrictTo,
-   constructionFromIncorporate,
+   constructionFromExtendable,
 } from ".."
+import { completeExtendable } from "../HigherKindedTypes/Extendable"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -71,7 +52,7 @@ const final: Shapeable<Reducer.type>["final"] = <S>
             () =>
                ({}),
          step:
-            (s: S, _) =>
+            (s: S) => (_) =>
                ({})
       })
 
@@ -82,8 +63,8 @@ const liftName: Shapeable<Reducer.type>["liftName"] =
       ({
          init: () => ({ [k]: m.init() }) as Record<K, T>,
          step:
-            (step, { [k]: acc }) =>
-               ({ [k]: m.step(step, acc) }) as Record<K, T>,
+            s => ({ [k]: acc }) =>
+               ({ [k]: m.step(s)(acc) }) as Record<K, T>,
       })
 
 const merge: Shapeable<Reducer.type>["merge"] =
@@ -96,11 +77,20 @@ const merge: Shapeable<Reducer.type>["merge"] =
                   ...r2.init()
                }),
          step:
-            (step, acc) =>
+            (s) => (acc) =>
                ({
-                  ...(r1.step(step, acc)),
-                  ...(r2.step(step, acc)),
+                  ...(r1.step(s)(acc)),
+                  ...(r2.step(s)(acc)),
                })
+      })
+
+const demerge: Demergable<Reducer.type>["demerge"] =
+   red =>
+      ({
+         init: red.init,
+         step:
+            ([s, p]) => acc =>
+               red.step({...s, ...p})(acc)
       })
 
 const incorporate: Incorporatable<Reducer.type>["incorporate"] =
@@ -121,23 +111,50 @@ const incorporate: Incorporatable<Reducer.type>["incorporate"] =
                      ...i2
                   }),
             step:
-               (s, pt) =>
+               s => pt =>
                   {
-                     const pp = r1.step(s, pr1(pt))
+                     const pp = r1.step(s)(pr1(pt))
 
                      return {
                         ...pp,
-                        ...r2.step({...s, ...pp}, pr2(pt))
+                        ...r2.step({...s, ...pp})(pr2(pt))
                      }
                   }
          })
       }
 
-const { construct } = constructionFromIncorporate<Reducer.type>({
+const { extend }: Extendable<Reducer.type> =
+   completeExtendable(
+      <S, P extends Product>(base: Reducer<S, P>) =>
+         <K extends string, T>(
+            [key, red]: [exclude<K, keyof P>, Reducer<[S, P], T>]) =>
+               ({
+                  init:
+                     () =>
+                        ({
+                           ...base.init(),
+                           [key]: red.init()
+                        }) as P & Record<K, T>,
+                  step:
+                     (s: S) =>
+                        (pp: P & Record<K, T>) =>
+                           {
+                              const { [key as K]: t, ...p } = pp
+
+                              const nextBase = base.step(s)(p as P)
+
+                              return {
+                                 ...nextBase,
+                                 [key as string]: red.step([s, nextBase])(t as T)
+                              } as P & Record<K, T>
+                           }
+               })
+   )
+
+const { construct } = constructionFromExtendable<Reducer.type>({
    final,
-   liftName,
-   merge,
-   incorporate
+   extend,
+   demerge
 })
 
 // ---------------------------------------------------------------------------
@@ -148,11 +165,16 @@ export const reducer
    : Shapeable<Reducer.type>
    & Incorporatable<Reducer.type>
    & Construction<Reducer.type>
+   & Extendable<Reducer.type>
+   & Demergable<Reducer.type>
+   & Construction<Reducer.type>
    =
       {
          final,
          liftName,
          merge,
          incorporate,
-         construct
+         construct,
+         demerge,
+         extend
       }

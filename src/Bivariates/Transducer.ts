@@ -29,18 +29,23 @@ import type {
    Reducer,
    Category,
    Shapeable,
-   Construction,
    Identity,
    Compound,
    Incorporatable,
+   exclude,
+   Demergable,
+   Construction,
+   Expand,
 } from ".."
 
 import {
    morphism,
-   constructionFromIncorporate,
    incorporateFromCompound,
    compoundFromCategory,
+   completeExtendable,
+   constructionFromExtendable
  } from ".."
+import { comprehendableFromExtendable } from "../HigherKindedTypes/Comprehension"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -59,7 +64,7 @@ const map = <S, T>(
       <A>(red: Reducer<T, A>) =>
          ({
             ...red,
-            step: (s: S, acc: A) => red.step(mor(s), acc)
+            step: (s: S) => (acc: A) => red.step(mor(s))(acc)
          })
 
 const final: Shapeable<Transducer.type>["final"] = <S>(): Transducer<S, {}> =>
@@ -80,51 +85,87 @@ const liftName: Shapeable<Transducer.type>["liftName"] = <
             return tr(map(nName)(reducer))
          }
 
-const merge = <
-   S, T1 extends Product, T2 extends Product
-   >(
-      tr1: Transducer<S, Omit<T1, keyof T2>>,
-      tr2: Transducer<S, Omit<T2, keyof T1>>,
-   ): Transducer<S, Omit<T1, keyof T2> & Omit<T2, keyof T1>> =>
-      <A>(red: Reducer<Omit<T1, keyof T2> & Omit<T2, keyof T1>, A>) =>
-         {
-            return {
-               init: red.init,
-               step:
-                  (s: S, acc: A) =>
-                     {
-                        const a1 = tr1({
-                           init: red.init,
-                           step:
-                              (t1: Omit<T1, keyof T2>, acc) =>
-                                 {
-                                    const a2 = tr2({
-                                       init: red.init,
-                                       step:
-                                          (t2: Omit<T2, keyof T1>) =>
-                                             // We can replace T1 & T2 with any type T1 * T2
-                                             // that has a constructor Mor<[T1, T2], T1 * T2>
-                                             // Implicitly, we are also using map:Mor=>Tr
-                                             red.step({ ...t1, ...t2 }, acc)
-                                    })
+const merge = <S, P extends Product, E extends Product>(
+      base: Transducer<S, P>,
+      ext: Transducer<[S, P], E>,
+   ): Transducer<S, P & E> =>
+      comprehend<S>(
+         ["base", cLift(base)],
+         ["ext", ext]
+      )
 
-                                    return a2.step(s, acc)
-                                 }
-                        })
+const cLift = <S, T>(
+   tr: Transducer<S, T>
+   ): Transducer<[S, {}], T> =>
+      compose(
+         map(([s, _]) => s),
+         tr
+      )
 
-                        return a1.step(s, acc)
-                     }
-            }
-         }
+const pairing = <S, T1, T2>(
+   tr1: Transducer<S, T1>,
+   tr2: Transducer<S, T2>,
+   ): Transducer<S, [T1, T2]> =>
+      compose(
+         comprehend<S>(
+            ["first", cLift(tr1)],
+            ["second", cLift(tr2)]),
+         map(({ first, second }) =>
+            [ first, second ]))
 
 export const filter = <S>(
-   pred: Mor<S, boolean>)
-   : Transducer<S, S> =>
+   pred: Mor<S, boolean>
+   ): Transducer<S, S> =>
       <A>(red: Reducer<S, A>) =>
          ({
-            ...red,
-            step: (s: S, acc: A) => pred(s) ? red.step(s, acc) : acc
+            init: red.init,
+            step:
+               (s: S) => (acc: A) =>
+                  pred(s) ? red.step(s)(acc) : acc
          })
+
+const demerge: Demergable<Transducer.type>["demerge"] =
+   tr =>
+      compose(
+         map(([s, t]) => ({ ...s, ...t })),
+         tr)
+
+const { extend } = completeExtendable<Transducer.type>(
+   <S, P>(
+      base: Transducer<S, P>) => <K extends string, T>(
+         [key, ext]: [exclude<K, keyof P>, Transducer<[S, P], T>]
+      ): Transducer<S, P & Record<K, T>> =>
+         red =>
+            {
+               const iv = red.init()
+               const init = () => iv
+
+               return {
+                  init,
+                  step:
+                     s => accS =>
+                        {
+                           const redBase = base({
+                              init,
+                              step:
+                                 p => accSP =>
+                                    {
+                                       const redExt = ext({
+                                          init,
+                                          step:
+                                             t => accPT =>
+                                                red.step({...p, [key]: t} as P & Record<K, T>)(accPT)
+                                       })
+
+                                       return redExt.step([s, p])(accSP)
+                                    }
+                           })
+
+                           return redBase.step(s)(accS)
+                        }
+               }
+            }
+   )
 
 const { compound } = compoundFromCategory<Transducer.type>({
    identity,
@@ -137,11 +178,15 @@ const { incorporate } = incorporateFromCompound<Transducer.type>({
    compound
 })
 
-const { construct } = constructionFromIncorporate<Transducer.type>({
+const { construct } = constructionFromExtendable<Transducer.type>({
+   extend,
    final,
-   liftName,
-   merge,
-   incorporate
+   demerge,
+})
+
+const { comprehend } = comprehendableFromExtendable<Transducer.type>({
+   extend,
+   final
 })
 
 // ---------------------------------------------------------------------------
@@ -153,6 +198,7 @@ export const transducer
    & Shapeable<Transducer.type>
    & Compound<Transducer.type>
    & Incorporatable<Transducer.type>
+   & Demergable<Transducer.type>
    & Construction<Transducer.type>
    & Functor<Identity.type, Mor.type, Transducer.type>
    =
@@ -164,6 +210,7 @@ export const transducer
          merge,
          compound,
          incorporate,
+         demerge,
          construct,
          map,
       }

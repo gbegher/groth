@@ -16,7 +16,7 @@ declare module "../index" {
 
    export namespace __Construction {
       export type Spread<C extends Bivariate> = {
-         construct: <S extends Product>(...args: [string, $2<C, S & Product, Product>][]) => $2<C, S, Product>
+         construct: <S extends Product>(...args: [string, $2<C, S & Product, any>][]) => $2<C, S, Product>
       }
 
       export type C0<C extends Bivariate> = {
@@ -283,15 +283,17 @@ declare module "../index" {
 import type {
    Bivariate,
    Construction,
-   Incorporatable,
-   Shapeable,
    Product,
-   $2
+   $2,
+   Extendable,
+   Array,
+   Named,
+   Shapeable,
+   Demergable,
 } from ".."
 
 import {
-   asReducible,
-   array
+   array,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -307,31 +309,26 @@ export const construct = <C extends Bivariate>(
 // Theorems
 // ---------------------------------------------------------------------------
 
-export const constructionFromIncorporate = <
-   C extends Bivariate
->(
-   {
-      incorporate,
-      merge,
-      liftName,
-      final
-   }: Incorporatable<C> & Shapeable<C>
-): Construction<C> =>
-   ({
-      construct:
-         <S extends Product>(
-            ...args: [string, $2<C, S & Product, Product>][]
-         ) =>
-            asReducible(array)(args).reduce({
-               init:
-                  () =>
-                     final<S>() as $2<C, S, Product>,
-               step:
-                  ([k, next], acc) =>
-                     merge(
-                        acc,
-                        liftName(k, incorporate(acc, next))
-                     )
-
-            })
-   }) as Construction<C>
+export const constructionFromExtendable = <C extends Bivariate>(
+      {
+         extend,
+         final,
+         demerge
+      }: Extendable<C> & Pick<Shapeable<C>, "final"> & Demergable<C>,
+   ): Construction<C> =>
+      ({
+         construct: <S extends Product>(
+            ...args: Array<Named<$2<C, S & Product, any>>>
+            )  =>
+               array(args).reduce<$2<C, S, Product>>({
+                  init: final,
+                  step:
+                     ([key, next]) =>
+                        acc =>
+                           {
+                              return extend(acc)(
+                                 [key, demerge(next)]
+                              )
+                           }
+               })
+      })

@@ -36,7 +36,7 @@ declare module "../index" {
 
    export type exclude<K, E> =
       K extends E
-         ? { __not_allowed: E, __error: never }
+         ? K & { __key_not_allowed: E, error: never }
          : K
 
    export type Expand<T> = T extends infer U ? { [k in keyof U]: U[k] } : never
@@ -55,7 +55,6 @@ import {
    Table,
    Maybe,
    Functor,
-   Mor,
 } from ".."
 
 import {
@@ -95,7 +94,7 @@ const asReducible: Collectible<Product.type, Named.type>["asReducible"] =
             ({ init, step }: Reducer<Named<S>, T>)
             : T =>
                Object.keys(product).reduce(
-                  (acc, key) => step([key, product[key]], acc),
+                  (acc, key) => step([key, product[key]])(acc),
                   init())
       })
 
@@ -104,7 +103,7 @@ const collector: Collectible<Product.type, Named.type>["collector"] =
       ({
          init: () => ({}),
          step:
-            ([key, v], acc) =>
+            ([key, v]) => acc =>
                ({ ...acc, [key]: v })
       }) as Reducer<Named<S>, Product<S>>
 
@@ -140,6 +139,21 @@ export const restrictTo = <Y>(
                   [k]: v
                }),
             {}) as Pick<X, keyof Y>
+
+export const omit = <P extends Product>(
+   pr: P
+   ) => <Ks extends Array<keyof P>>(
+      ...ks: Ks)
+      : Omit<P, Ks[number]> =>
+         undefined!
+
+export const pick = <P extends Product>(
+   pr: P
+   ) => <Ks extends Array<keyof P>>(
+      ...ks: Ks)
+      : Omit<P, Ks[number]> =>
+         undefined!
+
 
 // ---------------------------------------------------------------------------
 // Augmentation

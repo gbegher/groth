@@ -11,11 +11,12 @@ declare module "../index" {
 
       export type HigherType =
          Collectible<Array.type, Identity.type>
-         & Transformable<Array.type>
+         // & Transformable<Array.type>
          & Functor<Array.type>
 
-      export type AugmentedType<T> =
-         Reducible<T>
+      export type Augmented<S> =
+         Reducible<S>
+         & { map: <T>(fn: Mor<S, T>) => Array<T> }
 
       export const augmented = "Array.Augmented"
       export type augmented = typeof augmented
@@ -24,7 +25,7 @@ declare module "../index" {
    export namespace Generic {
       export interface Register<A1> {
          [Array.type]: Array<A1>
-         [Array.augmented]: Array.AugmentedType<A1>
+         [Array.augmented]: Array.Augmented<A1>
       }
    }
 }
@@ -40,13 +41,15 @@ import type {
    Reducer,
    Augmentation,
    Functor,
+   Mor,
 } from ".."
 
 import {
-   transformableFromCollectible,
-   augment
+   // transformableFromCollectible,
+   augment,
+   transducer
 } from ".."
-import { transducer } from "../Bivariates/Transducer"
+import { transformableFromCollectible } from "../HigherKindedTypes/Transformable"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -59,7 +62,7 @@ const asReducible: Collectible<Array.type, Identity.type>["asReducible"] =
             ({ init, step }: Reducer<S, T>)
             : T =>
                array.reduce(
-                  (t, s) => step(s, t),
+                  (t, s) => step(s)(t),
                   init())
       })
 
@@ -68,7 +71,7 @@ const collector: Collectible<Array.type, Identity.type>["collector"] =
       ({
          init: () => [],
          step:
-            (s, acc) =>
+            s => acc =>
                [...acc, s]
       }) as Reducer<S, Array<S>>
 
@@ -82,28 +85,31 @@ const map: Functor<Array.type>["map"] =
    mor =>
       transform(transducer.map(mor))
 
-
 // ---------------------------------------------------------------------------
 // Augmentation
 // ---------------------------------------------------------------------------
 
 const augmentation: Augmentation<Array.type, Array.augmented> =
-   <S>(x: Array<S>) =>
-      asReducible(x)
+   <S>(arr: Array<S>) =>
+      ({
+         ...asReducible(arr),
+         map: <T>(fn: Mor<S, T>) => map(fn)(arr),
+      })
+
 
 const higherType
    : Array.HigherType
    = {
       asReducible,
       collector,
-      transform,
+      // transform,
       map
    }
 
 export const array = augment<
       Array.type,
       Array.augmented,
-      typeof higherType
+      Array.HigherType
    >(
       augmentation,
       higherType

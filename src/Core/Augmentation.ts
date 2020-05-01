@@ -1,7 +1,5 @@
 import { Generic, $, Product } from ".."
 
-
-
 export type Augmentation<T extends Generic, AT extends Generic> =
     <X>(x: $<T, X>) => $<AT, X>
 

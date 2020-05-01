@@ -61,8 +61,8 @@ const asReducible: Collectible<OrderedMap.type, Named.type>["asReducible"] =
                .reduce({
                   init: reducer.init,
                   step:
-                     (key: string, acc: T) =>
-                        reducer.step([key, values[key]], acc)
+                     (key: string) => (acc: T) =>
+                        reducer.step([key, values[key]])(acc)
                })
       })
 
@@ -71,7 +71,7 @@ const collector: Collectible<OrderedMap.type, Named.type>["collector"] =
       ({
          init: () => ({ index: [], values: {} }),
          step:
-            ([k, v], { index, values }) =>
+            ([k, v]) => ({ index, values }) =>
                ({
                   index: [...index, k],
                   values: { ...values, [k]: v }
