@@ -43,25 +43,16 @@ declare module "../index" {
 import type {
    Category,
    Mor,
-   Shapeable,
    Product,
    Functor,
    Identity,
-   Compound,
-   Incorporatable,
-   Construction,
    Extendable,
-   exclude,
-   Demergable
+   Nameable,
 } from ".."
 
 import {
-   compoundFromCategory,
-   incorporateFromCompound,
-   constructionFromExtendable,
-   completeExtendable,
-   llog,
 } from ".."
+import { defineExtendable } from "../HigherKindedTypes/Extendable"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -79,81 +70,34 @@ const compose: Category<Mor.type>["compose"] =
    (m1, m2) =>
       t1 => m2(m1(t1))
 
-const final: Shapeable<Mor.type>["final"] =
-   () =>
-      () => ({})
+const liftName: Nameable<Mor.type>["liftName"] = <K extends string>(
+   k: K) => <S, T>(
+      mor: Mor<S, T>) =>
+         (s: S) =>
+            ({ [k]: mor(s) } as Record<K, T>)
 
-const liftName = <K extends string, S, T>(
-   k: K,
-   fn: Mor<S, T>)
-   : Mor<S, Record<K, T>> =>
-      (s: S) =>
-         ({
-            [k]: fn(s)
-         }) as Record<K, T>
-
-const merge = <S, T1 extends Product, T2 extends Product>(
-   m1: Mor<S, Omit<T1, keyof T2>>,
-   m2: Mor<S, Omit<T2, keyof T1>>)
-   : Mor<S, Omit<T1, keyof T2> & Omit<T2, keyof T1>> =>
-      (s: S) =>
-         ({
-            ...m1(s),
-            ...m2(s)
-         })
-
-const demerge: Demergable<Mor.type>["demerge"] =
-   mor =>
-      ([s, p]) =>
-         mor({ ...s, ...p })
-
-const { extend }: Extendable<Mor.type> =
-   completeExtendable(
-      <S, P extends Product>(base: Mor<S, P>) => <K extends string, T>(
-         [key, ext]: [exclude<K, keyof P>, Mor<[S, P], T>]) =>
+const { hoist, extend }: Extendable<Mor.type> =
+   defineExtendable({
+      initial:
+         () =>
+            () => ({}),
+      hoist: <S, T>
+         (mor: Mor<S, T>) =>
+            ([s, _]: [S, {}]) =>
+               mor(s),
+      extend: <S, B extends Product, E extends Product>(
+         base: Mor<S, B>,
+         extension: Mor<[S, B], E>) =>
             (s: S) =>
                {
-                  const p: P = base(s)
+                  const b = base(s)
 
                   return {
-                     ...p,
-                     [key]: ext([s, p])
-                  } as P & Record<K, T>
-
-                  /*
-
-                  =
-                     compose(
-                        pairing(id_S,base),
-                        diag_[S, P], // = pairing(id, id)
-                        parallel(
-                           second,
-                           liftName(k, ext)
-                        ),
-                        (p, kt) => ...kt
-                     )
-
-                  */
-
+                     ...b,
+                     ...extension([s, b])
+                  }
                }
-   )
-
-const { compound } = compoundFromCategory<Mor.type>({
-   merge,
-   identity,
-   compose
-})
-
-const { incorporate } = incorporateFromCompound<Mor.type>({
-   merge,
-   compound
-})
-
-const { construct } = constructionFromExtendable<Mor.type>({
-   extend,
-   final,
-   demerge
-})
+   })
 
 // ---------------------------------------------------------------------------
 // Augmentations
@@ -162,21 +106,14 @@ const { construct } = constructionFromExtendable<Mor.type>({
 export const morphism
    : Category<Mor.type>
    & Functor<Identity.type, Mor.type, Mor.type>
-   & Shapeable<Mor.type>
-   & Compound<Mor.type>
-   & Incorporatable<Mor.type>
-   & Demergable<Mor.type>
-   & Construction<Mor.type>
+   & Extendable<Mor.type>
+   & Nameable<Mor.type>
    =
       {
          identity,
          compose,
          map,
-         final,
-         liftName,
-         merge,
-         compound,
-         incorporate,
-         demerge,
-         construct
+         extend,
+         hoist,
+         liftName
       }

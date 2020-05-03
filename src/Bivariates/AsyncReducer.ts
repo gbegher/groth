@@ -26,122 +26,92 @@ declare module "../index" {
 
 import type {
    AsyncReducer,
-   Shapeable,
    Product,
-   Construction,
    Extendable,
-   exclude,
-   Demergable
+   Nameable,
 } from ".."
 
 import {
-   constructionFromExtendable,
-   completeExtendable
+   defineExtendable
 } from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-const final: Shapeable<AsyncReducer.type>["final"] = <S>
-   (): AsyncReducer<S, {}> =>
-      ({
-         init:
-            async () => ({}),
-         step:
-            (s: S) =>
-               async (_) => ({})
-      })
+const { extend, hoist }: Extendable<AsyncReducer.type> =
+   defineExtendable({
+      initial:
+         <S>() =>
+            ({
+               init:
+                  async () => ({}),
+               step:
+                  (s: S) =>
+                     async () => ({})
+            }),
+      hoist: <S, T>(
+         red: AsyncReducer<S, T>) =>
+            ({
+               init:
+                  red.init,
+               step:
+                  ([s, {}]: [S, {}]) =>
+                     async (acc: T) =>
+                        await red.step(s)(acc)
+            }),
+      extend: <S, B extends Product, E extends Product>(
+         base: AsyncReducer<S, B>,
+         extension: AsyncReducer<[S, B], E>
+         ): AsyncReducer<S, B & E> =>
+            ({
+               init:
+                  async () =>
+                     ({
+                        ...await base.init(),
+                        ...await extension.init(),
+                     }),
+               step:
+                  s =>
+                     async acc =>
+                        {
+                           const b = await base.step(s)(acc)
 
-const liftName: Shapeable<AsyncReducer.type>["liftName"] =
-   <K extends string, S extends Product, T>(
-      k: K, m: AsyncReducer<S, T>
-   ): AsyncReducer<S, Record<K, T>> =>
-      ({
-         init:
-            async () => ({ [k]: await m.init() }) as Record<K, T>,
-         step:
-            step =>
-               async ({ [k]: acc }) =>
-                  ({ [k]: await m.step(step)(acc) }) as Record<K, T>,
-      })
-
-const merge: Shapeable<AsyncReducer.type>["merge"] =
-   (r1, r2) =>
-      ({
-         init:
-            async () =>
-               ({
-                  ...await r1.init(),
-                  ...await r2.init()
-               }),
-         step:
-            step =>
-               async acc =>
-                  ({
-                     ...(await r1.step(step)(acc)),
-                     ...(await r2.step(step)(acc)),
-                  })
-      })
-
-const demerge: Demergable<AsyncReducer.type>["demerge"] =
-   asred =>
-      ({
-         init: asred.init,
-         step:
-            ([s, p]) => acc =>
-               asred.step({...s, ...p})(acc)
-      })
-
-const { extend }: Extendable<AsyncReducer.type> =
-   completeExtendable(
-      <S, P extends Product>(base: AsyncReducer<S, P>) =>
-         <K extends string, T>(
-            [key, red]: [exclude<K, keyof P>, AsyncReducer<[S, P], T>]) =>
-               ({
-                  init:
-                     async () =>
-                        ({
-                           ...await base.init(),
-                           [key]: await red.init()
-                        }) as P & Record<K, T>,
-                  step:
-                     (s: S) =>
-                        async (pp: P & Record<K, T>) =>
-                           {
-                              const { [key as K]: t, ...p } = pp
-
-                              const nextBase = await base.step(s)(p as P)
-
-                              return {
-                                 ...nextBase,
-                                 [key as string]: red.step([s, nextBase])(t as T)
-                              } as P & Record<K, T>
+                           return {
+                              ...b,
+                              ...await extension.step([s, b])(acc)
                            }
-               })
-   )
+                        }
+            })
+   })
 
-const { construct } = constructionFromExtendable<AsyncReducer.type>({
-   final,
-   extend,
-   demerge
-})
+const liftName: Nameable<AsyncReducer.type>["liftName"] = <K extends string>(
+   k: K) => <S, T>(
+      asred: AsyncReducer<S, T>) =>
+         ({
+            init:
+               async () =>
+                  ({
+                     [k]: await asred.init()
+                  }) as Record<K, T>,
+            step:
+               (s: S) =>
+                  async ({ [k]: t }: Record<K, T>) =>
+                     ({
+                        [k]: await asred.step(s)(t)
+                     }) as Record<K, T>
+         })
 
 // ---------------------------------------------------------------------------
 // Augmentations
 // ---------------------------------------------------------------------------
 
 export const reducer
-   : Shapeable<AsyncReducer.type>
-   & Extendable<AsyncReducer.type>
-   & Demergable<AsyncReducer.type>
-   & Construction<AsyncReducer.type>
+   : Extendable<AsyncReducer.type>
+   & Nameable<AsyncReducer.type>
    =
       {
-         final,
-         liftName,
-         merge,
+         hoist,
          extend,
-         demerge,
-         construct
+         liftName
       }

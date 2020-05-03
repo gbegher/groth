@@ -65,6 +65,7 @@ import {
    transducer,
    named
 } from "../index"
+import { filter } from "../Bivariates/Transducer"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -145,14 +146,18 @@ export const omit = <P extends Product>(
    ) => <Ks extends Array<keyof P>>(
       ...ks: Ks)
       : Omit<P, Ks[number]> =>
-         undefined!
+         transform(
+            filter<Named<any>>(([key, _]) => ks.indexOf(key) === -1)
+         )(pr) as Omit<P, Ks[number]>
 
 export const pick = <P extends Product>(
    pr: P
    ) => <Ks extends Array<keyof P>>(
       ...ks: Ks)
       : Omit<P, Ks[number]> =>
-         undefined!
+         transform(
+            filter<Named<any>>(([key, _]) => ks.indexOf(key) !== -1)
+         )(pr) as Omit<P, Ks[number]>
 
 
 // ---------------------------------------------------------------------------

@@ -29,6 +29,8 @@ import type {
    Identity,
    AsyncMor,
    Extendable,
+   Named,
+   Nameable,
 } from ".."
 
 import {
@@ -62,8 +64,7 @@ const { extend, hoist }: Extendable<AsyncMor.type> =
                await asmor(s),
       extend: <S, B extends Product, E extends Product>(
          base: AsyncMor<S, B>,
-         extension: AsyncMor<[S, B], E>
-         ) =>
+         extension: AsyncMor<[S, B], E>) =>
             async (s: S) =>
                {
                   const b = await base(s)
@@ -75,6 +76,12 @@ const { extend, hoist }: Extendable<AsyncMor.type> =
                }
    })
 
+const liftName: Nameable<AsyncMor.type>["liftName"] = <K extends string>(
+   k: K) => <S, T>(
+      asmor: AsyncMor<S, T>) =>
+         async (s: S) =>
+            ({ [k]: await asmor(s) } as Record<K, T>)
+
 // ---------------------------------------------------------------------------
 // Augmentations
 // ---------------------------------------------------------------------------
@@ -83,11 +90,13 @@ export const asyncMor
    : Category<AsyncMor.type>
    & Functor<Identity.type, AsyncMor.type, AsyncMor.type>
    & Extendable<AsyncMor.type>
+   & Nameable<AsyncMor.type>
    =
       {
          identity,
          compose,
          map,
          hoist,
-         extend
+         extend,
+         liftName
       }

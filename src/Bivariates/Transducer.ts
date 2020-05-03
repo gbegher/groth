@@ -28,35 +28,28 @@ import type {
    Mor,
    Reducer,
    Category,
-   Shapeable,
    Identity,
-   Compound,
-   Incorporatable,
-   exclude,
-   Demergable,
-   Construction,
-   Expand,
+   Extendable,
+   Nameable,
 } from ".."
 
 import {
    morphism,
-   incorporateFromCompound,
-   compoundFromCategory,
-   completeExtendable,
-   constructionFromExtendable
+   defineExtendable
  } from ".."
-import { comprehendableFromExtendable } from "../HigherKindedTypes/Comprehension"
+import { defineCategory } from "../HigherKindedTypes/Category"
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-const identity: Category<Transducer.type>["identity"] =
-   () => tr => tr
-
-const compose: Category<Transducer.type>["compose"] =
-   (tr1, tr2) =>
-      red => tr1(tr2(red))
+const { identity, compose }: Category<Transducer.type> = defineCategory({
+   identity: <S>() =>
+      <A>(red: Reducer<S, A>) => red,
+   compose: <T0, T1, T2>(
+      tr1: Transducer<T0, T1>, tr2: Transducer<T1, T2>) =>
+         <A>(red: Reducer<T2, A>) => tr1(tr2(red))
+})
 
 const map = <S, T>(
    mor: Mor<S, T>)
@@ -67,51 +60,74 @@ const map = <S, T>(
             step: (s: S) => (acc: A) => red.step(mor(s))(acc)
          })
 
-const final: Shapeable<Transducer.type>["final"] = <S>(): Transducer<S, {}> =>
-      // Think of this as a constant endomorphism on the accumulator,
-      // applied at every step
-      map(() => ({}))
-
-const liftName: Shapeable<Transducer.type>["liftName"] = <
-   K extends string, S, T
-   >(
-      k: K,
+const { hoist, extend } = defineExtendable<Transducer.type>({
+   initial:
+      <S>() => <A>(
+         red: Reducer<{}, A>
+         ): Reducer<S, A> =>
+            ({
+               init: red.init,
+               step:
+                  (_) => acc =>
+                     red.step({})(acc)
+            }),
+   hoist: <S, T>(
       tr: Transducer<S, T>
-   ): Transducer<S, Record<K, T>> =>
-      reducer =>
-         {
-            const nName = morphism.liftName<K, T, T>(k, morphism.identity<T>())
+      ): Transducer<[S, {}], T> =>
+         compose(
+            map(([s, _]: [S, {}]) => s),
+            tr,
+         ),
+   extend: <S, B extends Product, E extends Product>(
+      base: Transducer<S, B>,
+      extension: Transducer<[S, B], E>
+      ): Transducer<S, B & E> => <A>(
+         red: Reducer<B & E, A>) =>
+            {
+               const iv = red.init()
+               const init = () => iv
 
-            return tr(map(nName)(reducer))
-         }
+               return {
+                  init,
+                  step:
+                     s => (accS: A) =>
+                        {
+                           const redBase = base({
+                              init,
+                              step:
+                                 b => accB =>
+                                    {
+                                       const redExt = extension({
+                                          init,
+                                          step:
+                                             e => accE =>
+                                                red.step({...b, ...e})(accE)
+                                       })
 
-const merge = <S, P extends Product, E extends Product>(
-      base: Transducer<S, P>,
-      ext: Transducer<[S, P], E>,
-   ): Transducer<S, P & E> =>
-      comprehend<S>(
-         ["base", cLift(base)],
-         ["ext", ext]
-      )
+                                       return redExt.step([s, b])(accB)
+                                    }
+                           })
 
-const cLift = <S, T>(
-   tr: Transducer<S, T>
-   ): Transducer<[S, {}], T> =>
-      compose(
-         map(([s, _]) => s),
-         tr
-      )
+                           return redBase.step(s)(accS)
+                        }
+               }
+            }
+})
 
-const pairing = <S, T1, T2>(
-   tr1: Transducer<S, T1>,
-   tr2: Transducer<S, T2>,
-   ): Transducer<S, [T1, T2]> =>
-      compose(
-         comprehend<S>(
-            ["first", cLift(tr1)],
-            ["second", cLift(tr2)]),
-         map(({ first, second }) =>
-            [ first, second ]))
+const liftName: Nameable<Transducer.type>["liftName"] = <K extends string>(
+      k: K) => <S, T>(
+         tr: Transducer<S, T>
+         ): Transducer<S, Record<K, T>> =>
+            reducer =>
+               {
+                  const nName = morphism.liftName(k)(morphism.identity<T>())
+
+                  return tr(map(nName)(reducer))
+               }
+
+// ---------------------------------------------------------------------------
+// Special constructors
+// ---------------------------------------------------------------------------
 
 export const filter = <S>(
    pred: Mor<S, boolean>
@@ -124,93 +140,21 @@ export const filter = <S>(
                   pred(s) ? red.step(s)(acc) : acc
          })
 
-const demerge: Demergable<Transducer.type>["demerge"] =
-   tr =>
-      compose(
-         map(([s, t]) => ({ ...s, ...t })),
-         tr)
-
-const { extend } = completeExtendable<Transducer.type>(
-   <S, P>(
-      base: Transducer<S, P>) => <K extends string, T>(
-         [key, ext]: [exclude<K, keyof P>, Transducer<[S, P], T>]
-      ): Transducer<S, P & Record<K, T>> =>
-         red =>
-            {
-               const iv = red.init()
-               const init = () => iv
-
-               return {
-                  init,
-                  step:
-                     s => accS =>
-                        {
-                           const redBase = base({
-                              init,
-                              step:
-                                 p => accSP =>
-                                    {
-                                       const redExt = ext({
-                                          init,
-                                          step:
-                                             t => accPT =>
-                                                red.step({...p, [key]: t} as P & Record<K, T>)(accPT)
-                                       })
-
-                                       return redExt.step([s, p])(accSP)
-                                    }
-                           })
-
-                           return redBase.step(s)(accS)
-                        }
-               }
-            }
-   )
-
-const { compound } = compoundFromCategory<Transducer.type>({
-   identity,
-   compose,
-   merge
-})
-
-const { incorporate } = incorporateFromCompound<Transducer.type>({
-   merge,
-   compound
-})
-
-const { construct } = constructionFromExtendable<Transducer.type>({
-   extend,
-   final,
-   demerge,
-})
-
-const { comprehend } = comprehendableFromExtendable<Transducer.type>({
-   extend,
-   final
-})
-
 // ---------------------------------------------------------------------------
 // Augmentations
 // ---------------------------------------------------------------------------
 
 export const transducer
    : Category<Transducer.type>
-   & Shapeable<Transducer.type>
-   & Compound<Transducer.type>
-   & Incorporatable<Transducer.type>
-   & Demergable<Transducer.type>
-   & Construction<Transducer.type>
+   & Extendable<Transducer.type>
+   & Nameable<Transducer.type>
    & Functor<Identity.type, Mor.type, Transducer.type>
    =
       {
          identity,
          compose,
-         final,
-         liftName,
-         merge,
-         compound,
-         incorporate,
-         demerge,
-         construct,
+         extend,
+         hoist,
          map,
+         liftName
       }

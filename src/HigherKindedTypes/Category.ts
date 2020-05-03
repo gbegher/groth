@@ -3,9 +3,92 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Category<H extends Bivariate> = {
-      identity: <T>() => $2<H, T, T>
-      compose: <T1, T2, T3>(h1: $2<H, T1, T2>, h2: $2<H, T2, T3>) => $2<H, T1, T3>
+   export type Category<C extends Bivariate> = {
+      identity: Category.core<C>["identity"]
+      compose: {
+         <S>(...args: $2<C, S, any>): $2<C, S, any>
+
+         <S>(): $2<C, S, S>
+
+         <S, T0>(
+            m0: $2<C, S, T0>,
+         ): $2<C, S, T0>
+
+         <S, T0, T1>(
+            m0: $2<C, S, T0>,
+            m1: $2<C, T0, T1>,
+         ): $2<C, S, T1>
+
+         <S, T0, T1, T2>(
+            m0: $2<C, S, T0>,
+            m1: $2<C, T0, T1>,
+            m2: $2<C, T1, T2>,
+         ): $2<C, S, T2>
+
+         <S, T0, T1, T2, T3>(
+            m0: $2<C, S, T0>,
+            m1: $2<C, T0, T1>,
+            m2: $2<C, T1, T2>,
+            m3: $2<C, T2, T3>,
+         ): $2<C, S, T3>
+
+         <S, T0, T1, T2, T3, T4>(
+            m0: $2<C, S, T0>,
+            m1: $2<C, T0, T1>,
+            m2: $2<C, T1, T2>,
+            m3: $2<C, T2, T3>,
+            m4: $2<C, T3, T4>,
+         ): $2<C, S, T4>
+
+         <S, T0, T1, T2, T3, T4, T5>(
+            m0: $2<C, S, T0>,
+            m1: $2<C, T0, T1>,
+            m2: $2<C, T1, T2>,
+            m3: $2<C, T2, T3>,
+            m4: $2<C, T3, T4>,
+            m5: $2<C, T4, T5>,
+         ): $2<C, S, T5>
+
+         <S, T0, T1, T2, T3, T4, T5, T6>(
+            m0: $2<C, S, T0>,
+            m1: $2<C, T0, T1>,
+            m2: $2<C, T1, T2>,
+            m3: $2<C, T2, T3>,
+            m4: $2<C, T3, T4>,
+            m5: $2<C, T4, T5>,
+            m6: $2<C, T5, T6>,
+         ): $2<C, S, T6>
+
+         <S, T0, T1, T2, T3, T4, T5, T6, T7,>(
+            m0: $2<C, S, T0>,
+            m1: $2<C, T0, T1>,
+            m2: $2<C, T1, T2>,
+            m3: $2<C, T2, T3>,
+            m4: $2<C, T3, T4>,
+            m5: $2<C, T4, T5>,
+            m6: $2<C, T5, T6>,
+            m7: $2<C, T6, T7>,
+         ): $2<C, S, T7>
+
+         <S, T0, T1, T2, T3, T4, T5, T6, T7, T8>(
+            m0: $2<C, S, T0>,
+            m1: $2<C, T0, T1>,
+            m2: $2<C, T1, T2>,
+            m3: $2<C, T2, T3>,
+            m4: $2<C, T3, T4>,
+            m5: $2<C, T4, T5>,
+            m6: $2<C, T5, T6>,
+            m7: $2<C, T6, T7>,
+            m8: $2<C, T7, T8>,
+         ): $2<C, S, T8>
+      }
+   }
+
+   export namespace Category {
+      export type core<C extends Bivariate> = {
+         identity: <T>() => $2<C, T, T>
+         compose: <T1, T2, T3>(h1: $2<C, T1, T2>, h2: $2<C, T2, T3>) => $2<C, T1, T3>
+      }
    }
 }
 
@@ -16,101 +99,33 @@ declare module "../index" {
 import type {
    Category,
    Bivariate,
-   $2
+   $2,
 } from ".."
+import { array } from "../Generics/Array"
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const identity = <H extends Bivariate>(
-   { identity }: Category<H>) =>
+export const identity = <C extends Bivariate>(
+   { identity }: Category<C>) =>
       identity
 
-export const compose = <H extends Bivariate>(
-   { compose, identity }: Category<H>) =>
-      {
-         type C<T1, T2> = $2<H, T1, T2>
+export const compose = <C extends Bivariate>(
+   { compose }: Category<C>) =>
+      compose
 
-         function result<T1>
-            ()
-            : C<T1, T1>
-
-         function result<T1, T2>
-            (m1: C<T1, T2>)
-            : C<T1, T2>
-
-         function result<T1, T2, T3>
-            (m1: C<T1, T2>,
-             m2: C<T2, T3>
-            )
-            : C<T1, T3>
-
-         function result<T1, T2, T3, T4>
-            (m1: C<T1, T2>,
-             m2: C<T2, T3>,
-             m3: C<T3, T4>,
-            )
-            : C<T1, T4>
-
-         function result<T1, T2, T3, T4, T5>
-            (m1: C<T1, T2>,
-             m2: C<T2, T3>,
-             m3: C<T3, T4>,
-             m4: C<T4, T5>,
-            )
-            : C<T1, T5>
-
-         function result<T1, T2, T3, T4, T5, T6>
-            (m1: C<T1, T2>,
-             m2: C<T2, T3>,
-             m3: C<T3, T4>,
-             m4: C<T4, T5>,
-             m5: C<T5, T6>,
-            )
-            : C<T1, T6>
-
-         function result<T1, T2, T3, T4, T5, T6, T7>
-            (m1: C<T1, T2>,
-             m2: C<T2, T3>,
-             m3: C<T3, T4>,
-             m4: C<T4, T5>,
-             m5: C<T5, T6>,
-             m6: C<T6, T7>,
-            )
-            : C<T1, T7>
-
-         function result<T1, T2, T3, T4, T5, T6, T7, T8>
-            (m1: C<T1, T2>,
-             m2: C<T2, T3>,
-             m3: C<T3, T4>,
-             m4: C<T4, T5>,
-             m5: C<T5, T6>,
-             m6: C<T6, T7>,
-             m7: C<T7, T8>,
-            )
-            : C<T1, T8>
-
-         function result<T1, T2, T3, T4, T5, T6, T7, T8, T9>
-            (m1: C<T1, T2>,
-             m2: C<T2, T3>,
-             m3: C<T3, T4>,
-             m4: C<T4, T5>,
-             m5: C<T5, T6>,
-             m6: C<T6, T7>,
-             m7: C<T7, T8>,
-             m8: C<T8, T9>,
-            )
-            : C<T1, T9>
-
-         function result
-            (...ms: C<any, any>[])
-            : C<any, any>
-               {
-                  return ms.reduce(
-                     compose,
-                     identity())
-               }
-
-         return result
-      }
+export const defineCategory = <C extends Bivariate>(
+   { identity, compose }: Category.core<C>
+   ): Category<C> =>
+      ({
+         identity,
+         compose:
+            <S>(...args: $2<C, S, any>[]) =>
+               array(args).reduce({
+                  init: identity,
+                  step:
+                     m => acc =>
+                        compose(acc, m)
+               })
+      })
