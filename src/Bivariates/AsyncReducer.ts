@@ -47,7 +47,7 @@ const { extend, hoist }: Extendable<AsyncReducer.type> =
                init:
                   async () => ({}),
                step:
-                  (s: S) =>
+                  (_: S) =>
                      async () => ({})
             }),
       hoist: <S, T>(
@@ -56,7 +56,7 @@ const { extend, hoist }: Extendable<AsyncReducer.type> =
                init:
                   red.init,
                step:
-                  ([s, {}]: [S, {}]) =>
+                  ([s, _]: [S, {}]) =>
                      async (acc: T) =>
                         await red.step(s)(acc)
             }),
@@ -87,7 +87,8 @@ const { extend, hoist }: Extendable<AsyncReducer.type> =
 
 const liftName: Nameable<AsyncReducer.type>["liftName"] = <K extends string>(
    k: K) => <S, T>(
-      asred: AsyncReducer<S, T>) =>
+      asred: AsyncReducer<S, T>
+      ) =>
          ({
             init:
                async () =>
@@ -106,7 +107,7 @@ const liftName: Nameable<AsyncReducer.type>["liftName"] = <K extends string>(
 // Augmentations
 // ---------------------------------------------------------------------------
 
-export const reducer
+export const asyncReducer
    : Extendable<AsyncReducer.type>
    & Nameable<AsyncReducer.type>
    =

@@ -1,92 +1,65 @@
 import "mocha"
 import { expect } from "chai"
 
+import { withCallCount } from "./util"
+
 import type {
-   Named,
    AsyncMor
 } from "../../src"
 
 import {
    asyncMor,
-   forall,
    array,
+   forall,
 } from "../../src"
 
-type AsFn = AsyncMor<any, any>
-
-type CountedFunction = {
-   wrapped: AsFn
-   counter: () => number
-}
-
-const memoizeCallCount =
-   (fn: AsFn)
-   : CountedFunction =>
+const wrapDefinitions =
+   (definition: AsyncMor<any, any>[]) =>
       {
-         let count = 0
-
-         const wrapped: AsFn =
-            async x =>
-               {
-                  count++
-
-                  return await fn(x)
-               }
-
-         return {
-            wrapped,
-            counter: () => count
-         }
-      }
-
-const memoizeDefinitions =
-   (definition: Named<AsFn>[]) =>
-      {
-         const memoized = array(definition)
-            .map(([key, mor]) =>
-               [key, memoizeCallCount(mor)] as Named<CountedFunction>
-            )
+         const memoized = array(definition).map(withCallCount)
 
          return {
             counter:
-               array(memoized)
-                  .map(([key, { counter }]) => counter),
+               array(memoized).map(({ callCount: counter }) => counter),
             definitions:
-               array(memoized)
-                  .map(([key, { wrapped }]) => [key, wrapped] as Named<AsFn>),
+               array(memoized).map(({ wrapped }) => wrapped),
          }
       }
 
+const {
+   hoist,
+   extend
+} = asyncMor
 
 context("The `AsyncMor` type", () => {
-   context("... allows `Constructions`", () => {
+   context("... is `Extendable`", () => {
       type TestCase = {
          title: string,
          input: any
-         definition: [string, AsFn][]
+         definition: AsyncMor<[any, any], any>[]
          expectation: any
       }
 
       const testCases: TestCase[] = [
          {
-            title: "the empty construction to an empty input",
-            input: {},
+            title: "the empty extension to an empty input",
+            input: undefined,
             definition: [],
             expectation: {}
          },
          {
-            title: "the empty construction to a nonempty input",
+            title: "the empty extension to a nonempty input",
             input: { some: "input" },
             definition: [],
             expectation: {}
          },
          {
-            title: "a parallel (constant) construction to an empty input",
-            input: {},
+            title: "a constant construction to an empty input",
+            input: undefined,
             definition: [
-               ["one", async () => 1],
-               ["two", async () => 2],
-               ["three", async () => 3],
+               async () => ({ one: 1 }),
+               async () => ({ two: 2 }),
+               async () => ({ three: 3 }),
             ],
             expectation: {
                one: 1,
@@ -95,12 +68,12 @@ context("The `AsyncMor` type", () => {
             }
          },
          {
-            title: "a parallel (constant) construction to a nonempty input",
-            input: { value: 2 },
+            title: "a parallel construction",
+            input: 2,
             definition: [
-               ["one", async ({ value }) => 1 * value],
-               ["two", async ({ value }) => 2 * value],
-               ["three", async ({ value }) => 3 * value],
+               hoist(async i => ({ one: 1 * i })),
+               hoist(async i => ({ two: 2 * i })),
+               hoist(async i => ({ three: 3 * i })),
             ],
             expectation: {
                one: 2,
@@ -109,37 +82,57 @@ context("The `AsyncMor` type", () => {
             }
          },
          {
-            title: "a simple construction",
-            input: {
-               init: 0
-            },
+            title: "a general construction",
+            input: "input",
             definition: [
-               ["one", async x => x],
-               ["two", async x => x],
-               ["three", async x => x],
+               async ([input, acc]) => ({ one: { input, acc } }),
+               async ([input, acc]) => ({ two: { input, acc } }),
+               async ([input, acc]) => ({ three: { input, acc } }),
             ],
             expectation: {
                one: {
-                  init: 0
+                  input: "input",
+                  acc: {},
                },
                two: {
-                  init: 0,
-                  one: { init: 0 }
+                  input: "input",
+                  acc: {
+                     one: {
+                        input: "input",
+                        acc: {},
+                     },
+                  },
                },
                three: {
-                  init: 0,
-                  one: { init: 0 },
-                  two: { init: 0, one: { init: 0 } }
-               },
+                  input: "input",
+                  acc: {
+                     one: {
+                        input: "input",
+                        acc: {},
+                     },
+                     two: {
+                        input: "input",
+                        acc: {
+                           one: {
+                              input: "input",
+                              acc: {},
+                           },
+                        },
+                     },
+                  }
+               }
             }
          }
       ]
 
       testCases.forEach(({ title, input, definition, expectation }) => {
          context(`When applying ${title}`, () => {
-            const { definitions, counter } = memoizeDefinitions(definition)
+            const {
+               definitions,
+               counter
+            } = wrapDefinitions(definition)
 
-            const construction = asyncMor.construct(...definitions)
+            const construction = asyncMor.extend(...definitions)
 
             let result: any
 
@@ -147,11 +140,11 @@ context("The `AsyncMor` type", () => {
                result = await construction(input)
             })
 
-            it("should yield the expected result", async () => {
+            it("should yield the expected result", () => {
                expect(result).to.deep.equal(expectation)
             })
 
-            it("should call each defining morphism precisely once", async () => {
+            it("should call each defining morphism precisely once", () => {
                expect(
                   forall(array(counter),
                      c => c() === 1

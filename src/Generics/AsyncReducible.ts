@@ -3,36 +3,36 @@
 // ---------------------------------------------------------------------------
 
 declare module "../index" {
-   export type Reducible<S> = {
-      reduce: <T>(reducer: Reducer<S, T>) => T
+   export type AsyncReducible<S> = {
+      reduceAsync: <T>(reducer: AsyncReducer<S, T>) => Promise<T>
    }
 
-   export namespace Reducible {
+   export namespace AsyncReducible {
       export type Augmentor<F, X> =
          F extends Generic ?
          X extends Generic
             ?
                {
-                  asReducible: <S>(fs: $<F, S>) => Reducible<$<X, S>>
+                  asAsyncReducible: <S>(fs: $<F, S>) => AsyncReducible<$<X, S>>
                }
             : never : never
 
-      export const type = "Reducible"
+      export const type = "AsyncReducible"
       export type type = typeof type
 
-      export const augmentor = "Reducible.Augmentor"
+      export const augmentor = "AsyncReducible.Augmentor"
       export type augmentor = typeof augmentor
    }
 
    export namespace Generic {
       export interface Register<A1> {
-         [Reducible.type]: Reducible<A1>
+         [AsyncReducible.type]: AsyncReducible<A1>
       }
    }
 
    export namespace Bivariate {
       export interface Register<A1, A2> {
-         [Reducible.augmentor]: Reducible.Augmentor<A1, A2>
+         [AsyncReducible.augmentor]: AsyncReducible.Augmentor<A1, A2>
       }
    }
 }
@@ -42,72 +42,59 @@ declare module "../index" {
 // ---------------------------------------------------------------------------
 
 import type {
-   Reducible,
-   Mor,
-   Functor,
+   AsyncReducible,
    Generic,
+   AsyncMor,
 } from ".."
 
-import { transducer } from ".."
+import {
+} from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const reduce = <S>(
-   { reduce }: Reducible<S>) =>
-      reduce
+export const reduceAsync = <S>(
+   { reduceAsync }: AsyncReducible<S>) =>
+      reduceAsync
 
-export const asReducible = <
+export const asAsyncReducible = <
    T extends Generic,
    X extends Generic
    >
-   ({ asReducible }: Reducible.Augmentor<T, X>) =>
-      asReducible
-
-const map = <S, T>
-   (fn: Mor<S, T>)
-   : Mor<Reducible<S>, Reducible<T>> =>
-      reducible =>
-         ({
-            reduce:
-               reducer =>
-                  reducible.reduce(
-                     transducer.map(fn)(reducer))
-         })
+   ({ asAsyncReducible }: AsyncReducible.Augmentor<T, X>) =>
+      asAsyncReducible
 
 // ---------------------------------------------------------------------------
 // Utility functions
 // ---------------------------------------------------------------------------
 
-export const forall = <S>(
-   red: Reducible<S>,
-   pred: Mor<S, boolean>
-): boolean =>
-   red.reduce({
-      init: () => true as boolean,
+export const forallAsync = async <S>(
+   red: AsyncReducible<S>,
+   pred: AsyncMor<S, boolean>
+) =>
+   await red.reduceAsync({
+      init: async () => true as boolean,
       step:
-         s => acc =>
-            acc && pred(s)
+         s =>
+            async acc =>
+               acc && await pred(s)
    })
 
-export const exists = <S>(
-   red: Reducible<S>,
-   pred: Mor<S, boolean>
-): boolean =>
-   red.reduce({
-      init: () => false as boolean,
+export const existsAsync = async <S>(
+   red: AsyncReducible<S>,
+   pred: AsyncMor<S, boolean>
+) =>
+   await red.reduceAsync({
+      init: async () => false as boolean,
       step:
-         s => acc =>
-            acc || pred(s)
+         s =>
+            async acc =>
+               acc || await pred(s)
    })
 
 // ---------------------------------------------------------------------------
 // Augmentation
 // ---------------------------------------------------------------------------
 
-export const reducible:
-   Functor<Reducible.type, Mor.type, Mor.type> =
-      {
-         map
-      }
+export const asyncReducible: {} = {}

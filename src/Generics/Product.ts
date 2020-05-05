@@ -55,17 +55,18 @@ import {
    Table,
    Maybe,
    Functor,
+   AsyncReducer,
 } from ".."
 
 import {
-   transformableFromCollectible,
    augment,
+   transformableFromCollectible,
    some,
    none,
    transducer,
-   named
-} from "../index"
-import { filter } from "../Bivariates/Transducer"
+   filter,
+   named,
+} from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -88,15 +89,32 @@ const asTable = <S>(
          return { get, has }
       }
 
-const asReducible: Collectible<Product.type, Named.type>["asReducible"] =
-   <S>(product: Product<S>) =>
+const asReducible: Collectible<Product.type, Named.type>["asReducible"] = <S>(
+   prod: Product<S>) =>
       ({
          reduce: <T>
             ({ init, step }: Reducer<Named<S>, T>)
             : T =>
-               Object.keys(product).reduce(
-                  (acc, key) => step([key, product[key]])(acc),
+               Object.keys(prod).reduce(
+                  (acc, key) => step([key, prod[key]])(acc),
                   init())
+      })
+
+const asAsyncReducible: Collectible<Product.type, Named.type>["asAsyncReducible"] = <S>(
+   prod: Product<S>) =>
+      ({
+         reduceAsync: async <T>(
+            { init, step }: AsyncReducer<Named<S>, T>) =>
+               {
+                  let acc = await init()
+
+                  for (const key in prod) {
+                     acc = await step([key, prod[key]])(acc)
+                  }
+
+                  return acc
+               }
+
       })
 
 const collector: Collectible<Product.type, Named.type>["collector"] =
@@ -167,6 +185,7 @@ export const pick = <P extends Product>(
 const augmentation: Augmentation<Product.type, Product.augmented> =
    prod => ({
       ...asReducible(prod),
+      ...asAsyncReducible(prod),
       ...asTable(prod),
       map: fn => map(fn)(prod),
       mapNamed: fn => mapNamed(fn)(prod),
@@ -176,6 +195,7 @@ const higherType
    : Product.HigherType
    = {
       asReducible,
+      asAsyncReducible,
       collector,
       transform,
       map,

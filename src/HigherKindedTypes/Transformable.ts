@@ -54,7 +54,7 @@ export const transformableFromCollectible = <
       F extends Generic,
       X extends Generic
    >(
-      { asReducible, collector }: Collectible<F, X>
+      { asReducible, collector }: Pick<Collectible<F, X>, "asReducible" | "collector">
    ): Transformable<F, X> =>
       ({
          transform:

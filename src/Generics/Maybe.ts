@@ -30,9 +30,7 @@ import type {
    Functor
 } from ".."
 
-import {
-   match
-} from ".."
+import { match } from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation

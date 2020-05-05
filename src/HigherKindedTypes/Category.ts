@@ -101,7 +101,8 @@ import type {
    Bivariate,
    $2,
 } from ".."
-import { array } from "../Generics/Array"
+
+import { array } from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation

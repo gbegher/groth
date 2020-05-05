@@ -14,7 +14,9 @@ declare module "../index" {
          T extends Generic ?
          X extends Generic
             ?
-               Reducible.Augmentor<T, X> & {
+               Reducible.Augmentor<T, X>
+               & AsyncReducible.Augmentor<T, X>
+               & {
                   collector: <S>() => Reducer<$<X, S>, $<T, S>>
                }
             : never : never
@@ -43,10 +45,7 @@ import type {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const collector = <
-   T extends Generic,
-   X extends Generic
-   >
-   ({ collector }: Collectible<T, X>)
-   : Collectible<T, X>["collector"] =>
+export const collector = <T extends Generic, X extends Generic>(
+   { collector }: Collectible<T, X>
+   ): Collectible<T, X>["collector"] =>
       collector

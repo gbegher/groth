@@ -1,12 +1,16 @@
 import "mocha"
 import { expect } from "chai"
 
-import {
-   Mor, array, Named, forall
+import { withCallCount } from "./util"
+
+import type {
+   Mor
 } from "../../src"
 
 import {
-   morphism
+   morphism,
+   array,
+   forall,
 } from "../../src"
 
 type CountedFunction = {
@@ -14,86 +18,67 @@ type CountedFunction = {
    counter: () => number
 }
 
-const memoizeCallCount =
-   (fn: (...args: any[]) => any)
-   : CountedFunction =>
-      {
-         let count = 0
-
-         const wrapped = (...args: any[]) =>
-            {
-               count++
-
-               return fn(...args)
-            }
-
-         return {
-            wrapped,
-            counter: () => count
-         }
-      }
-
 const memoizeDefinitions =
-   (definition: Named<Mor<any, any>>[]) =>
+   (definition: Mor<any, any>[]) =>
       {
-         const memoized = array(definition)
-            .map(([key, mor]) =>
-               [key, memoizeCallCount(mor)] as Named<CountedFunction>
-            )
+         const memoized = array(definition).map(withCallCount)
 
          return {
             counter:
-               array(memoized)
-                  .map(([key, { counter }]) => counter),
+               array(memoized).map(({ callCount: counter }) => counter),
             definitions:
-               array(memoized)
-                  .map(([key, { wrapped }]) => [key, wrapped] as Named<Mor<any, any>>),
+               array(memoized).map(({ wrapped }) => wrapped),
          }
       }
 
+const {
+   hoist,
+   extend
+} = morphism
 
-context.only("The `Mor` type", () => {
-   context("... allows `Constructions`", () => {
+context("The `Mor` type", () => {
+   context("... is `Extendable`", () => {
       type TestCase = {
          title: string,
          input: any
-         definition: [string, Mor<any, any>][]
+         definition: Mor<[any, any], any>[]
          expectation: any
       }
+
       const testCases: TestCase[] = [
-         // {
-         //    title: "the empty construction to an empty input",
-         //    input: {},
-         //    definition: [],
-         //    expectation: {}
-         // },
-         // {
-         //    title: "the empty construction to a nonempty input",
-         //    input: { some: "input" },
-         //    definition: [],
-         //    expectation: {}
-         // },
-         // {
-         //    title: "a parallel (constant) construction to an empty input",
-         //    input: {},
-         //    definition: [
-         //       ["one", () => 1],
-         //       ["two", () => 2],
-         //       ["three", () => 3],
-         //    ],
-         //    expectation: {
-         //       one: 1,
-         //       two: 2,
-         //       three: 3,
-         //    }
-         // },
          {
-            title: "a parallel (constant) construction to a nonempty input",
-            input: { value: 2 },
+            title: "the empty extension to an empty input",
+            input: undefined,
+            definition: [],
+            expectation: {}
+         },
+         {
+            title: "the empty extension to a nonempty input",
+            input: { some: "input" },
+            definition: [],
+            expectation: {}
+         },
+         {
+            title: "a constant construction to an empty input",
+            input: undefined,
             definition: [
-               ["one", ({ value }) => 1 * value],
-               ["two", ({ value }) => 2 * value],
-               ["three", ({ value }) => 3 * value],
+               () => ({ one: 1 }),
+               () => ({ two: 2 }),
+               () => ({ three: 3 }),
+            ],
+            expectation: {
+               one: 1,
+               two: 2,
+               three: 3,
+            }
+         },
+         {
+            title: "a parallel construction",
+            input: 2,
+            definition: [
+               hoist(i => ({ one: 1 * i })),
+               hoist(i => ({ two: 2 * i })),
+               hoist(i => ({ three: 3 * i })),
             ],
             expectation: {
                one: 2,
@@ -101,38 +86,58 @@ context.only("The `Mor` type", () => {
                three: 6,
             }
          },
-         // {
-         //    title: "a simple construction",
-         //    input: {
-         //       init: 0
-         //    },
-         //    definition: [
-         //       ["one", x => x],
-         //       ["two", x => x],
-         //       ["three", x => x],
-         //    ],
-         //    expectation: {
-         //       one: {
-         //          init: 0
-         //       },
-         //       two: {
-         //          init: 0,
-         //          one: { init: 0 }
-         //       },
-         //       three: {
-         //          init: 0,
-         //          one: { init: 0 },
-         //          two: { init: 0, one: { init: 0 } }
-         //       },
-         //    }
-         // }
+         {
+            title: "a general construction",
+            input: "input",
+            definition: [
+               ([input, acc]) => ({ one: { input, acc } }),
+               ([input, acc]) => ({ two: { input, acc } }),
+               ([input, acc]) => ({ three: { input, acc } }),
+            ],
+            expectation: {
+               one: {
+                  input: "input",
+                  acc: {},
+               },
+               two: {
+                  input: "input",
+                  acc: {
+                     one: {
+                        input: "input",
+                        acc: {},
+                     },
+                  },
+               },
+               three: {
+                  input: "input",
+                  acc: {
+                     one: {
+                        input: "input",
+                        acc: {},
+                     },
+                     two: {
+                        input: "input",
+                        acc: {
+                           one: {
+                              input: "input",
+                              acc: {},
+                           },
+                        },
+                     },
+                  }
+               }
+            }
+         }
       ]
 
       testCases.forEach(({ title, input, definition, expectation }) => {
          context(`When applying ${title}`, () => {
-            const { definitions, counter } = memoizeDefinitions(definition)
+            const {
+               definitions,
+               counter
+            } = memoizeDefinitions(definition)
 
-            const construction = morphism.construct(...definitions)
+            const construction = extend(...definitions)
 
             const result = construction(input)
 

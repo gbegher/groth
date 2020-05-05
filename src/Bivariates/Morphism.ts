@@ -51,8 +51,9 @@ import type {
 } from ".."
 
 import {
+   defineCategory,
+   defineExtendable,
 } from ".."
-import { defineExtendable } from "../HigherKindedTypes/Extendable"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -62,13 +63,15 @@ const map: Functor<Identity.type>["map"] =
    fn =>
       fn
 
-const identity: Category<Mor.type>["identity"] =
-   () =>
-      x => x
-
-const compose: Category<Mor.type>["compose"] =
-   (m1, m2) =>
-      t1 => m2(m1(t1))
+const { identity, compose }: Category<Mor.type> = defineCategory({
+   identity: <S>() =>
+      (s: S) => s,
+   compose: <T0, T1, T2>(
+      m1: Mor<T0, T1>,
+      m2: Mor<T1, T2>,
+      ): Mor<T0, T2> =>
+         t1 => m2(m1(t1))
+})
 
 const liftName: Nameable<Mor.type>["liftName"] = <K extends string>(
    k: K) => <S, T>(

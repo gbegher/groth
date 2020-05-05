@@ -60,8 +60,8 @@ export const match = <S extends Sum<any>, T>(
 
 export const sumCase = <S extends Sum<any>, K extends CaseNames<S>>(
    type: K,
-   value: Case<S, K>)
-   : Component<S, K> =>
+   value: Case<S, K>
+   ): Component<S, K> =>
       ({
          type,
          value
@@ -69,7 +69,7 @@ export const sumCase = <S extends Sum<any>, K extends CaseNames<S>>(
 
 export const codiagonal = <T>(
    mors: Product<Mor<any, T>>
-): Mor<Sum<{ [k in keyof typeof mors]: CoDom<(typeof mors)[k]>}>, T> =>
+   ): Mor<Sum<{ [k in keyof typeof mors]: CoDom<(typeof mors)[k]>}>, T> =>
    cs => match(cs, product(mors).map(
       mor =>
          x => mor(x)
@@ -79,10 +79,9 @@ export const parallel = (
    mors: Product<Mor<any, any>>)
    : Mor<
       Sum<{ [k in keyof typeof mors]: CoDom<(typeof mors)[k]>}>,
-      Sum<{ [k in keyof typeof mors]: Dom<(typeof mors)[k]>}
-   >
+      Sum<{ [k in keyof typeof mors]: Dom<(typeof mors)[k]>}>
    > =>
-      (cs) => match(cs, product(mors).mapNamed(
+      cs => match(cs, product(mors).mapNamed(
          ([k, mor]) =>
             x => sumCase(k, mor(x))
       ))

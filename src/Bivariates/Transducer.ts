@@ -35,9 +35,9 @@ import type {
 
 import {
    morphism,
-   defineExtendable
- } from ".."
-import { defineCategory } from "../HigherKindedTypes/Category"
+   defineExtendable,
+   defineCategory,
+} from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation

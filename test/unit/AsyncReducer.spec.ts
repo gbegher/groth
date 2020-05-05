@@ -1,25 +1,31 @@
 import "mocha"
 import { expect } from "chai"
 
-import { withCallCount } from "./util"
+import {
+   withCallCount,
+   withAsyncCallCount,
+} from "./util"
 
-import type {
-   Reducer
+import {
+   AsyncReducer
 } from "../../src"
 
 import {
-   reducer,
+   asyncReducer,
    array,
    forall,
 } from "../../src"
 
+
+type AsFn = (...args: any[]) => any
+
 const countReducer =
-   (red: Reducer<any, any>) =>
+   (red: AsyncReducer<any, any>) =>
       {
          const {
             wrapped: init,
             callCount: initCount,
-         } = withCallCount(red.init)
+         } = withAsyncCallCount(red.init)
 
          const {
             wrapped: step,
@@ -28,16 +34,16 @@ const countReducer =
 
          return {
             wrapped: {
-               init, step
+               init,
+               step
             },
             initCount,
             stepCount
          }
       }
 
-const memoizeDefinitions = (
-   definition: Reducer<any, any>[]
-   ) =>
+const memoizeDefinitions =
+   (definition: AsyncReducer<any, any>[]) =>
       {
          const memoized = array(definition).map(countReducer)
 
@@ -54,14 +60,14 @@ const memoizeDefinitions = (
 const {
    hoist,
    extend
-} = reducer
+} = asyncReducer
 
-context("The `Reducer` type", () => {
+context("The `AsyncReducer` type", () => {
    context("... is `Extendable`", () => {
       type TestCase = {
          title: string,
          input: number[]
-         definition: Reducer<[any, any], any>[]
+         definition: AsyncReducer<[any, any], any>[]
          expectation: any
       }
 
@@ -79,21 +85,39 @@ context("The `Reducer` type", () => {
             expectation: {}
          },
          {
+            title: "a singular extension to some inputs",
+            input: [0, 1, 2],
+            definition: [
+               hoist<any, any>({
+                  init: async () => ({ one: [] }),
+                  step: s => async ({ one }) => ({ one: [...one, s] })
+               }),
+            ],
+            expectation: {
+               one: [0, 1, 2],
+            }
+         },
+         {
             title: "a parallel extension to some inputs",
             input: [0, 1, 2],
             definition: [
                hoist<any, any>({
-                  init: () => ({ one: [] }),
-                  step: s => ({ one }) => ({ one: [...one, s] })
+                  init: async () => ({ one: [] }),
+                  step: s => async ({ one }) => ({ one: [...one, s] })
                }),
                hoist<any, any>({
-                  init: () => ({ eno: [] }),
-                  step: s => ({ eno }) => ({ eno: [s, ...eno] })
+                  init: async () => ({ eno: [] }),
+                  step: s => async ({ eno }) => ({ eno: [s, ...eno] })
+               }),
+               hoist<any, any>({
+                  init: async () => ({ tre: [] }),
+                  step: s => async ({ tre }) => ({ tre: [s, ...tre] })
                }),
             ],
             expectation: {
                one: [0, 1, 2],
                eno: [0, 1, 2].reverse(),
+               tre: [0, 1, 2].reverse(),
             }
          },
          {
@@ -101,19 +125,20 @@ context("The `Reducer` type", () => {
             input: [0, 1, 2],
             definition: [
                hoist<any, any>({
-                  init: () => ({ one: [] }),
-                  step: inp => ({ one }) => ({ one: [...one, { v: 2 * inp }] })
+                  init: async () => ({ one: [] }),
+                  step: inp => async ({ one }) => ({ one: [...one, { v: 2 * inp }] })
                }),
                {
-                  init: () => ({ two: [] }),
+                  init: async () => ({ two: [] }),
                   step:
-                     ([inp, { one }]) => ({ two }) =>
-                        ({
-                           two: [
-                              ...two,
-                              { inp, one }
-                           ]
-                        })
+                     ([inp, { one }]) =>
+                        async ({ two }) =>
+                           ({
+                              two: [
+                                 ...two,
+                                 { inp, one }
+                              ]
+                           })
                }
             ],
             expectation: {
@@ -137,7 +162,11 @@ context("The `Reducer` type", () => {
 
             const construction = extend(...definitions)
 
-            const result = array(input).reduce(construction)
+            let result: any
+
+            before(async () => {
+               result = await array(input).reduceAsync(construction)
+            })
 
             it("should yield the expected result", () => {
                expect(result).to.deep.equal(expectation)

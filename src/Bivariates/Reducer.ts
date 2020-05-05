@@ -32,7 +32,7 @@ import type {
 } from ".."
 
 import {
-   defineExtendable,
+   defineExtendable
 } from ".."
 
 // ---------------------------------------------------------------------------

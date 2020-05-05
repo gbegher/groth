@@ -12,6 +12,11 @@ declare module "../index" {
       export const type = "OrderedMap"
       export type type = typeof type
 
+      export type HigherType =
+         Collectible<OrderedMap.type, Named.type>
+         & Transformable<OrderedMap.type>
+
+
       export type AugmentedType<T> =
          Reducible<Named<T>>
 
@@ -32,33 +37,30 @@ declare module "../index" {
 // ---------------------------------------------------------------------------
 
 import type {
-   Collectible,
    OrderedMap,
    Named,
    Reducer,
-   Transformable,
-   Augmentation
+   AsyncReducer,
+   Augmentation,
 } from ".."
 
 import {
+   augment,
    array,
    forall,
-   asReducible as reducibleFrom,
    transformableFromCollectible,
-   augment
 } from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-const asReducible: Collectible<OrderedMap.type, Named.type>["asReducible"] =
-   <S>({ index, values }: OrderedMap<S>) =>
+const asReducible: OrderedMap.HigherType["asReducible"] = <S>(
+   { index, values }: OrderedMap<S>) =>
       ({
          reduce:
             <T>(reducer: Reducer<Named<S>, T>) =>
-            reducibleFrom(array)(index)
-               .reduce({
+               array(index).reduce({
                   init: reducer.init,
                   step:
                      (key: string) => (acc: T) =>
@@ -66,7 +68,22 @@ const asReducible: Collectible<OrderedMap.type, Named.type>["asReducible"] =
                })
       })
 
-const collector: Collectible<OrderedMap.type, Named.type>["collector"] =
+const asAsyncReducible: OrderedMap.HigherType["asAsyncReducible"] = <S>(
+   { index, values }: OrderedMap<S>) =>
+      ({
+         reduceAsync:
+            <T>(reducer: AsyncReducer<Named<S>, T>) =>
+               array(index)
+                  .reduceAsync({
+                     init: reducer.init,
+                     step:
+                        (key: string) =>
+                           async (acc: T) =>
+                              await reducer.step([key, values[key]])(acc)
+                  })
+      })
+
+const collector: OrderedMap.HigherType["collector"] =
    <S>() =>
       ({
          init: () => ({ index: [], values: {} }),
@@ -101,14 +118,18 @@ export const omEquality = <T>(
 // Augmentation
 // ---------------------------------------------------------------------------
 
-const augmentation: Augmentation<OrderedMap.type, OrderedMap.augmented> =
-   asReducible
+const augmentation: Augmentation<OrderedMap.type, OrderedMap.augmented> = <S>(
+   om: OrderedMap<S>) =>
+      ({
+         ...asReducible(om),
+         ...asAsyncReducible(om)
+      })
 
 const higherType
-   : Collectible<OrderedMap.type, Named.type>
-   & Transformable<OrderedMap.type>
+   : OrderedMap.HigherType
    = {
       asReducible,
+      asAsyncReducible,
       collector,
       transform,
    }
@@ -116,7 +137,7 @@ const higherType
 export const ordmap = augment<
       OrderedMap.type,
       OrderedMap.augmented,
-      typeof higherType
+      OrderedMap.HigherType
    >(
       augmentation,
       higherType

@@ -29,12 +29,12 @@ import type {
    Identity,
    AsyncMor,
    Extendable,
-   Named,
    Nameable,
 } from ".."
 
 import {
-   defineExtendable
+   defineExtendable,
+   defineCategory,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -45,13 +45,16 @@ const map: Functor<Identity.type, Mor.type, AsyncMor.type>["map"] =
    fn =>
       async s => fn(s)
 
-const identity: Category<AsyncMor.type>["identity"] =
-   () =>
-      async x => x
-
-const compose: Category<AsyncMor.type>["compose"] =
-   (m1, m2) =>
-      async t1 => await m2(await m1(t1))
+const { compose, identity }: Category<AsyncMor.type> =
+   defineCategory({
+      identity: <S>() =>
+         async (s: S) => s,
+      compose: <T0, T1, T2>(
+         m1: AsyncMor<T0, T1>,
+         m2: AsyncMor<T1, T2>,
+         ): AsyncMor<T0, T2> =>
+            async t1 => await m2(await m1(t1))
+   })
 
 const { extend, hoist }: Extendable<AsyncMor.type> =
    defineExtendable({
@@ -64,7 +67,8 @@ const { extend, hoist }: Extendable<AsyncMor.type> =
                await asmor(s),
       extend: <S, B extends Product, E extends Product>(
          base: AsyncMor<S, B>,
-         extension: AsyncMor<[S, B], E>) =>
+         extension: AsyncMor<[S, B], E>
+         ) =>
             async (s: S) =>
                {
                   const b = await base(s)
