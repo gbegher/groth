@@ -17,8 +17,6 @@ import {
 } from "../../src"
 
 
-type AsFn = (...args: any[]) => any
-
 const countReducer =
    (red: AsyncReducer<any, any>) =>
       {
