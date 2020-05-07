@@ -29,10 +29,12 @@ import type {
    Product,
    Extendable,
    Nameable,
+   Comprehendible,
 } from ".."
 
 import {
-   defineExtendable
+   defineExtendable,
+   defineComprehendible,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -103,6 +105,11 @@ const liftName: Nameable<AsyncReducer.type>["liftName"] = <K extends string>(
                      }) as Record<K, T>
          })
 
+const { comprehend } = defineComprehendible({
+   liftName,
+   extend
+})
+
 // ---------------------------------------------------------------------------
 // Augmentations
 // ---------------------------------------------------------------------------
@@ -110,9 +117,11 @@ const liftName: Nameable<AsyncReducer.type>["liftName"] = <K extends string>(
 export const asyncReducer
    : Extendable<AsyncReducer.type>
    & Nameable<AsyncReducer.type>
+   & Comprehendible<AsyncReducer.type>
    =
       {
          hoist,
          extend,
-         liftName
+         liftName,
+         comprehend,
       }

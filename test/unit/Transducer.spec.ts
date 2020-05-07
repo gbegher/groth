@@ -20,7 +20,7 @@ const {
    extend
 } = transducer
 
-context.only("The `Transducer` type", () => {
+context("The `Transducer` type", () => {
    context("... is `Extendable`", () => {
       type TestCase = {
          title: string,
@@ -119,6 +119,77 @@ context.only("The `Transducer` type", () => {
             const transduced = extendedTransducer(inputReducer)
 
             const result = array(inputArray).reduce(transduced)
+
+            it("should yield the expected result", () => {
+               expect(result).to.deep.equal(expectation)
+            })
+         })
+      })
+   })
+
+   context.only("... is `Comprehendible`", () => {
+      type TestCase = {
+         title: string,
+         inputArray: number[]
+         schema: [] | [
+            [string, Transducer<[number, any], any>],
+            ...[string, Transducer<[any, any], any>][]
+         ]
+         expectation: any
+      }
+
+      const inputReducer = array.collector<Product>()
+
+      const schema: TestCase["schema"] = [
+         ["one", transducer.map(
+            ([i]) => i)
+         ],
+         ["two", transducer.map(
+            ([i, { one }]) => `one=${one}`)
+         ],
+         ["three",
+            transducer.compose(
+               filter(([_, { one }]) => one < 3),
+               transducer.map(([_, { two }]) => two )
+            )
+         ],
+         ["four",
+            transducer.map(([_, {one, three} ]) => ({ one, three }))
+         ],
+      ]
+
+      const testCases: TestCase[] = [
+         {
+            title: "a general transducer schema on an empty array",
+            inputArray: [],
+            schema,
+            expectation: []
+         },
+         {
+            title: "a general transducer schema on a one element array",
+            inputArray: [0],
+            schema,
+            expectation: [
+               { one: 0, two: "one=0", three: "one=0", four: { one: 0, three: "one=0" } }
+            ]
+         },
+         {
+            title: "a general transducer schema on some array",
+            inputArray: [0, 1, 2, 3],
+            schema,
+            expectation: [
+               { one: 0, two: "one=0", three: "one=0", four: { one: 0, three: "one=0" } },
+               { one: 1, two: "one=1", three: "one=1", four: { one: 1, three: "one=1" } },
+               { one: 2, two: "one=2", three: "one=2", four: { one: 2, three: "one=2" } },
+            ]
+         },
+      ]
+
+      testCases.forEach(({ title, inputArray, schema, expectation }) => {
+         context(`When comprehending ${title}`, () => {
+            const red = transducer.comprehend(...schema)(inputReducer)
+
+            const result = array(inputArray).reduce(red)
 
             it("should yield the expected result", () => {
                expect(result).to.deep.equal(expectation)

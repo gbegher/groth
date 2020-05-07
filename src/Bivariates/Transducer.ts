@@ -31,12 +31,14 @@ import type {
    Identity,
    Extendable,
    Nameable,
+   Comprehendible,
 } from ".."
 
 import {
    morphism,
    defineExtendable,
    defineCategory,
+   defineComprehendible,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -125,6 +127,11 @@ const liftName: Nameable<Transducer.type>["liftName"] = <K extends string>(
                   return tr(map(nName)(reducer))
                }
 
+const { comprehend } = defineComprehendible({
+   liftName,
+   extend
+})
+
 // ---------------------------------------------------------------------------
 // Special constructors
 // ---------------------------------------------------------------------------
@@ -148,6 +155,7 @@ export const transducer
    : Category<Transducer.type>
    & Extendable<Transducer.type>
    & Nameable<Transducer.type>
+   & Comprehendible<Transducer.type>
    & Functor<Identity.type, Mor.type, Transducer.type>
    =
       {
@@ -156,5 +164,6 @@ export const transducer
          extend,
          hoist,
          map,
-         liftName
+         liftName,
+         comprehend,
       }

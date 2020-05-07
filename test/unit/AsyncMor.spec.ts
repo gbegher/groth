@@ -28,7 +28,8 @@ const wrapDefinitions =
 
 const {
    hoist,
-   extend
+   extend,
+   comprehend
 } = asyncMor
 
 context("The `AsyncMor` type", () => {
@@ -132,7 +133,7 @@ context("The `AsyncMor` type", () => {
                counter
             } = wrapDefinitions(definition)
 
-            const construction = asyncMor.extend(...definitions)
+            const construction = extend(...definitions)
 
             let result: any
 
@@ -150,6 +151,48 @@ context("The `AsyncMor` type", () => {
                      c => c() === 1
                   )
                ).to.deep.equal(true)
+            })
+         })
+      })
+   })
+
+   context("... is `Comprehendible`", () => {
+      type TestCase = {
+         title: string,
+         input: any
+         schema: [string, AsyncMor<[any, any], any>][]
+         expectation: any
+      }
+
+      const testCases: TestCase[] = [
+         {
+            title: "a general schema",
+            input: 1,
+            schema: [
+               ["one", hoist(async x => x)],
+               ["two", async ([x, { one }]) => ({ x, one })],
+               ["three", async ([x, { one, two }]) => ({ x, one, two })],
+            ],
+            expectation: {
+               one: 1,
+               two: { x: 1, one: 1 },
+               three: { x: 1, one: 1, two: { x: 1, one: 1 }}
+            }
+         }
+      ]
+
+      testCases.forEach(({ title, input, schema, expectation }) => {
+         context(`When comprehending ${title}`, () => {
+            const construction = comprehend(...schema)
+
+            let result
+
+            before(async () => {
+               result = await construction(input)
+            })
+
+            it("should yield the expected result", () => {
+               expect(result).to.deep.equal(expectation)
             })
          })
       })

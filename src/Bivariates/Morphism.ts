@@ -48,11 +48,13 @@ import type {
    Identity,
    Extendable,
    Nameable,
+   Comprehendible,
 } from ".."
 
 import {
    defineCategory,
    defineExtendable,
+   defineComprehendible,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -102,6 +104,11 @@ const { hoist, extend }: Extendable<Mor.type> =
                }
    })
 
+const { comprehend } = defineComprehendible({
+   liftName,
+   extend
+})
+
 // ---------------------------------------------------------------------------
 // Augmentations
 // ---------------------------------------------------------------------------
@@ -111,6 +118,7 @@ export const morphism
    & Functor<Identity.type, Mor.type, Mor.type>
    & Extendable<Mor.type>
    & Nameable<Mor.type>
+   & Comprehendible<Mor.type>
    =
       {
          identity,
@@ -118,5 +126,6 @@ export const morphism
          map,
          extend,
          hoist,
-         liftName
+         liftName,
+         comprehend,
       }

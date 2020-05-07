@@ -30,12 +30,15 @@ import type {
    AsyncMor,
    Extendable,
    Nameable,
+   Comprehendible,
 } from ".."
 
 import {
    defineExtendable,
    defineCategory,
+   defineComprehendible,
 } from ".."
+
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -86,6 +89,11 @@ const liftName: Nameable<AsyncMor.type>["liftName"] = <K extends string>(
          async (s: S) =>
             ({ [k]: await asmor(s) } as Record<K, T>)
 
+const { comprehend } = defineComprehendible({
+   liftName,
+   extend
+})
+
 // ---------------------------------------------------------------------------
 // Augmentations
 // ---------------------------------------------------------------------------
@@ -95,6 +103,7 @@ export const asyncMor
    & Functor<Identity.type, AsyncMor.type, AsyncMor.type>
    & Extendable<AsyncMor.type>
    & Nameable<AsyncMor.type>
+   & Comprehendible<AsyncMor.type>
    =
       {
          identity,
@@ -102,5 +111,6 @@ export const asyncMor
          map,
          hoist,
          extend,
-         liftName
+         liftName,
+         comprehend,
       }

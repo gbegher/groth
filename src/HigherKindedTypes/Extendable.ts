@@ -8,7 +8,7 @@ declare module ".." {
       extend: {
             // Spread
             <S>(
-               ...extensions: $2<C, [S, Product], any>[]
+               ...extensions: $2<C, [S, Product], Product>[]
                ): $2<C, S, Product>
 
             // 0

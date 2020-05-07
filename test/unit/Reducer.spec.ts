@@ -161,4 +161,81 @@ context("The `Reducer` type", () => {
          })
       })
    })
+
+   context("... is `Comprehendible`", () => {
+      type TestCase = {
+         title: string,
+         input: any
+         schema: [string, Reducer<[any, any], any>][]
+         expectation: any
+      }
+
+      const schema: TestCase["schema"] = [
+         ["acc", hoist({
+            init: () => [],
+            step: n => acc => [...acc, n]
+         })],
+         ["sum", hoist({
+            init: () => 0,
+            step: n => acc => acc + n
+         })],
+         ["count", hoist({
+            init: () => 0,
+            step: _ => acc => acc + 1
+         })],
+         ["avrg", {
+            init: () => 0 as number | string,
+            step: ([_, { sum, count }]) => _ =>
+               count ? sum/count : "infty"
+         }],
+      ]
+
+      const testCases: TestCase[] = [
+         {
+            title: "a general reducer schema on an empty array",
+            input: [],
+            schema,
+            expectation: {
+               acc: [],
+               sum: 0,
+               count: 0,
+               avrg: 0
+            }
+         },
+         {
+            title: "a general reducer schema on a one item array",
+            input: [10],
+            schema,
+            expectation: {
+               acc: [10],
+               sum: 10,
+               count: 1,
+               avrg: 10
+            }
+         },
+         {
+            title: "a general reducer schema on some array",
+            input: [1, 2, 3, 4, 5],
+            schema,
+            expectation: {
+               acc: [1, 2, 3, 4, 5],
+               sum: 15,
+               count: 5,
+               avrg: 3
+            }
+         },
+      ]
+
+      testCases.forEach(({ title, input, schema, expectation }) => {
+         context(`When comprehending ${title}`, () => {
+            const red = reducer.comprehend(...schema)
+
+            const result = array(input).reduce(red)
+
+            it("should yield the expected result", () => {
+               expect(result).to.deep.equal(expectation)
+            })
+         })
+      })
+   })
 })
