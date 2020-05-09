@@ -41,6 +41,11 @@ import type {
    Functor,
    Named,
    Category,
+   Mor,
+} from ".."
+
+import {
+   defineCategory
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -52,21 +57,25 @@ const map: Functor<Named.type>["map"] =
       ([k, v]) =>
          [k, fn(v)]
 
-// Todo: Move type to CoMonad.ts
+// Todo: Move type to CoMonad.ts?
 const lift: Named.HigherType["lift"] =
    fn =>
       ([k, v]) =>
          [k, fn([k, v])]
 
-const identity: Category<Named.cokleisli>["identity"] =
-   () =>
-      ([_, t]) =>
-         t
+const { identity, compose }: Category<Named.cokleisli> = defineCategory({
+   identity: <S>() =>
+      ([_, s]: Named<S>) => s,
+   compose: <T0, T1, T2>(
+      m1: Mor<Named<T0>, T1>,
+      m2: Mor<Named<T1>, T2>,
+      ): Mor<Named<T0>, T2> =>
+         ([n, t]) =>
+            m2([n, m1([n, t])])
+})
 
-const compose: Category<Named.cokleisli>["compose"] =
-   (h1, h2) =>
-      ([n, t]) =>
-         h2([n, h1([n, t])])
+export const forgetName =
+   <X>([_, x]: Named<X>): X => x
 
 // ---------------------------------------------------------------------------
 // Augmentation

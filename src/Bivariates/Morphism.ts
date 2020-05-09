@@ -43,19 +43,18 @@ declare module "../index" {
 import type {
    Category,
    Mor,
-   Shapeable,
    Product,
    Functor,
    Identity,
-   Compound,
-   Incorporatable,
-   Construction
+   Extendable,
+   Nameable,
+   Comprehendible,
 } from ".."
 
 import {
-   compoundFromCategory,
-   incorporateFromCompound,
-   constructionFromIncorporate,
+   defineCategory,
+   defineExtendable,
+   defineComprehendible,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -66,53 +65,48 @@ const map: Functor<Identity.type>["map"] =
    fn =>
       fn
 
-const identity: Category<Mor.type>["identity"] =
-   () =>
-      x => x
-
-const compose: Category<Mor.type>["compose"] =
-   (m1, m2) =>
-      t1 => m2(m1(t1))
-
-const final: Shapeable<Mor.type>["final"] =
-   () =>
-      () => ({})
-
-const liftName = <K extends string, S, T>(
-   k: K,
-   fn: Mor<S, T>)
-   : Mor<S, Record<K, T>> =>
-      (s: S) =>
-         ({
-            [k]: fn(s)
-         }) as Record<K, T>
-
-const merge = <S, T1 extends Product, T2 extends Product>(
-   m1: Mor<S, Omit<T1, keyof T2>>,
-   m2: Mor<S, Omit<T2, keyof T1>>)
-   : Mor<S, Omit<T1, keyof T2> & Omit<T2, keyof T1>> =>
-      (s: S) =>
-         ({
-            ...m1(s),
-            ...m2(s)
-         })
-
-const { compound } = compoundFromCategory<Mor.type>({
-   merge,
-   identity,
-   compose
+const { identity, compose }: Category<Mor.type> = defineCategory({
+   identity: <S>() =>
+      (s: S) => s,
+   compose: <T0, T1, T2>(
+      m1: Mor<T0, T1>,
+      m2: Mor<T1, T2>,
+      ): Mor<T0, T2> =>
+         t1 => m2(m1(t1))
 })
 
-const { incorporate } = incorporateFromCompound<Mor.type>({
-   merge,
-   compound
-})
+const liftName: Nameable<Mor.type>["liftName"] = <K extends string>(
+   k: K) => <S, T>(
+      mor: Mor<S, T>) =>
+         (s: S) =>
+            ({ [k]: mor(s) } as Record<K, T>)
 
-const { construct } = constructionFromIncorporate<Mor.type>({
-   final,
+const { hoist, extend }: Extendable<Mor.type> =
+   defineExtendable({
+      initial:
+         () =>
+            () => ({}),
+      hoist: <S, T>
+         (mor: Mor<S, T>) =>
+            ([s, _]: [S, {}]) =>
+               mor(s),
+      extend: <S, B extends Product, E extends Product>(
+         base: Mor<S, B>,
+         extension: Mor<[S, B], E>) =>
+            (s: S) =>
+               {
+                  const b = base(s)
+
+                  return {
+                     ...b,
+                     ...extension([s, b])
+                  }
+               }
+   })
+
+const { comprehend } = defineComprehendible({
    liftName,
-   merge,
-   incorporate
+   extend
 })
 
 // ---------------------------------------------------------------------------
@@ -122,19 +116,16 @@ const { construct } = constructionFromIncorporate<Mor.type>({
 export const morphism
    : Category<Mor.type>
    & Functor<Identity.type, Mor.type, Mor.type>
-   & Shapeable<Mor.type>
-   & Compound<Mor.type>
-   & Incorporatable<Mor.type>
-   & Construction<Mor.type>
+   & Extendable<Mor.type>
+   & Nameable<Mor.type>
+   & Comprehendible<Mor.type>
    =
       {
          identity,
          compose,
          map,
-         final,
+         extend,
+         hoist,
          liftName,
-         merge,
-         compound,
-         incorporate,
-         construct
+         comprehend,
       }

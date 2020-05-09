@@ -28,30 +28,30 @@ import type {
    Mor,
    Reducer,
    Category,
-   Shapeable,
-   Construction,
    Identity,
-   Compound,
-   Incorporatable,
+   Extendable,
+   Nameable,
+   Comprehendible,
 } from ".."
 
 import {
    morphism,
-   constructionFromIncorporate,
-   incorporateFromCompound,
-   compoundFromCategory,
- } from ".."
+   defineExtendable,
+   defineCategory,
+   defineComprehendible,
+} from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-const identity: Category<Transducer.type>["identity"] =
-   () => tr => tr
-
-const compose: Category<Transducer.type>["compose"] =
-   (tr1, tr2) =>
-      red => tr1(tr2(red))
+const { identity, compose }: Category<Transducer.type> = defineCategory({
+   identity: <S>() =>
+      <A>(red: Reducer<S, A>) => red,
+   compose: <T0, T1, T2>(
+      tr1: Transducer<T0, T1>, tr2: Transducer<T1, T2>) =>
+         <A>(red: Reducer<T2, A>) => tr1(tr2(red))
+})
 
 const map = <S, T>(
    mor: Mor<S, T>)
@@ -59,90 +59,93 @@ const map = <S, T>(
       <A>(red: Reducer<T, A>) =>
          ({
             ...red,
-            step: (s: S, acc: A) => red.step(mor(s), acc)
+            step: (s: S) => (acc: A) => red.step(mor(s))(acc)
          })
 
-const final: Shapeable<Transducer.type>["final"] = <S>(): Transducer<S, {}> =>
-      // Think of this as a constant endomorphism on the accumulator,
-      // applied at every step
-      map(() => ({}))
-
-const liftName: Shapeable<Transducer.type>["liftName"] = <
-   K extends string, S, T
-   >(
-      k: K,
-      tr: Transducer<S, T>
-   ): Transducer<S, Record<K, T>> =>
-      reducer =>
-         {
-            const nName = morphism.liftName<K, T, T>(k, morphism.identity<T>())
-
-            return tr(map(nName)(reducer))
-         }
-
-const merge = <
-   S, T1 extends Product, T2 extends Product
-   >(
-      tr1: Transducer<S, Omit<T1, keyof T2>>,
-      tr2: Transducer<S, Omit<T2, keyof T1>>,
-   ): Transducer<S, Omit<T1, keyof T2> & Omit<T2, keyof T1>> =>
-      <A>(red: Reducer<Omit<T1, keyof T2> & Omit<T2, keyof T1>, A>) =>
-         {
-            return {
+const { hoist, extend } = defineExtendable<Transducer.type>({
+   initial:
+      <S>() => <A>(
+         red: Reducer<{}, A>
+         ): Reducer<S, A> =>
+            ({
                init: red.init,
                step:
-                  (s: S, acc: A) =>
-                     {
-                        const a1 = tr1({
-                           init: red.init,
-                           step:
-                              (t1: Omit<T1, keyof T2>, acc) =>
-                                 {
-                                    const a2 = tr2({
-                                       init: red.init,
-                                       step:
-                                          (t2: Omit<T2, keyof T1>) =>
-                                             // We can replace T1 & T2 with any type T1 * T2
-                                             // that has a constructor Mor<[T1, T2], T1 * T2>
-                                             // Implicitly, we are also using map:Mor=>Tr
-                                             red.step({ ...t1, ...t2 }, acc)
-                                    })
+                  (_) => acc =>
+                     red.step({})(acc)
+            }),
+   hoist: <S, T>(
+      tr: Transducer<S, T>
+      ): Transducer<[S, {}], T> =>
+         compose(
+            map(([s, _]: [S, {}]) => s),
+            tr,
+         ),
+   extend: <S, B extends Product, E extends Product>(
+      base: Transducer<S, B>,
+      extension: Transducer<[S, B], E>
+      ): Transducer<S, B & E> => <A>(
+         red: Reducer<B & E, A>) =>
+            {
+               const iv = red.init()
+               const init = () => iv
 
-                                    return a2.step(s, acc)
-                                 }
-                        })
+               return {
+                  init,
+                  step:
+                     s => (accS: A) =>
+                        {
+                           const redBase = base({
+                              init,
+                              step:
+                                 b => accB =>
+                                    {
+                                       const redExt = extension({
+                                          init,
+                                          step:
+                                             e => accE =>
+                                                red.step({...b, ...e})(accE)
+                                       })
 
-                        return a1.step(s, acc)
-                     }
+                                       return redExt.step([s, b])(accB)
+                                    }
+                           })
+
+                           return redBase.step(s)(accS)
+                        }
+               }
             }
-         }
+})
+
+const liftName: Nameable<Transducer.type>["liftName"] = <K extends string>(
+      k: K) => <S, T>(
+         tr: Transducer<S, T>
+         ): Transducer<S, Record<K, T>> =>
+            reducer =>
+               {
+                  const nName = morphism.liftName(k)(morphism.identity<T>())
+
+                  return tr(map(nName)(reducer))
+               }
+
+const { comprehend } = defineComprehendible({
+   liftName,
+   extend
+})
+
+// ---------------------------------------------------------------------------
+// Special constructors
+// ---------------------------------------------------------------------------
 
 export const filter = <S>(
-   pred: Mor<S, boolean>)
-   : Transducer<S, S> =>
+   pred: Mor<S, boolean>
+   ): Transducer<S, S> =>
       <A>(red: Reducer<S, A>) =>
          ({
-            ...red,
-            step: (s: S, acc: A) => pred(s) ? red.step(s, acc) : acc
+            init: red.init,
+            step:
+               (s: S) => (acc: A) =>
+                  pred(s) ? red.step(s)(acc) : acc
          })
-
-const { compound } = compoundFromCategory<Transducer.type>({
-   identity,
-   compose,
-   merge
-})
-
-const { incorporate } = incorporateFromCompound<Transducer.type>({
-   merge,
-   compound
-})
-
-const { construct } = constructionFromIncorporate<Transducer.type>({
-   final,
-   liftName,
-   merge,
-   incorporate
-})
 
 // ---------------------------------------------------------------------------
 // Augmentations
@@ -150,20 +153,17 @@ const { construct } = constructionFromIncorporate<Transducer.type>({
 
 export const transducer
    : Category<Transducer.type>
-   & Shapeable<Transducer.type>
-   & Compound<Transducer.type>
-   & Incorporatable<Transducer.type>
-   & Construction<Transducer.type>
+   & Extendable<Transducer.type>
+   & Nameable<Transducer.type>
+   & Comprehendible<Transducer.type>
    & Functor<Identity.type, Mor.type, Transducer.type>
    =
       {
          identity,
          compose,
-         final,
-         liftName,
-         merge,
-         compound,
-         incorporate,
-         construct,
+         extend,
+         hoist,
          map,
+         liftName,
+         comprehend,
       }

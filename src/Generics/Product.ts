@@ -36,7 +36,7 @@ declare module "../index" {
 
    export type exclude<K, E> =
       K extends E
-         ? { __not_allowed: E, __error: never }
+         ? K & { __key_not_allowed: E, error: never }
          : K
 
    export type Expand<T> = T extends infer U ? { [k in keyof U]: U[k] } : never
@@ -55,17 +55,18 @@ import {
    Table,
    Maybe,
    Functor,
-   Mor,
+   AsyncReducer,
 } from ".."
 
 import {
-   transformableFromCollectible,
    augment,
+   transformableFromCollectible,
    some,
    none,
    transducer,
-   named
-} from "../index"
+   filter,
+   named,
+} from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -88,15 +89,32 @@ const asTable = <S>(
          return { get, has }
       }
 
-const asReducible: Collectible<Product.type, Named.type>["asReducible"] =
-   <S>(product: Product<S>) =>
+const asReducible: Collectible<Product.type, Named.type>["asReducible"] = <S>(
+   prod: Product<S>) =>
       ({
          reduce: <T>
             ({ init, step }: Reducer<Named<S>, T>)
             : T =>
-               Object.keys(product).reduce(
-                  (acc, key) => step([key, product[key]], acc),
+               Object.keys(prod).reduce(
+                  (acc, key) => step([key, prod[key]])(acc),
                   init())
+      })
+
+const asAsyncReducible: Collectible<Product.type, Named.type>["asAsyncReducible"] = <S>(
+   prod: Product<S>) =>
+      ({
+         reduceAsync: async <T>(
+            { init, step }: AsyncReducer<Named<S>, T>) =>
+               {
+                  let acc = await init()
+
+                  for (const key in prod) {
+                     acc = await step([key, prod[key]])(acc)
+                  }
+
+                  return acc
+               }
+
       })
 
 const collector: Collectible<Product.type, Named.type>["collector"] =
@@ -104,7 +122,7 @@ const collector: Collectible<Product.type, Named.type>["collector"] =
       ({
          init: () => ({}),
          step:
-            ([key, v], acc) =>
+            ([key, v]) => acc =>
                ({ ...acc, [key]: v })
       }) as Reducer<Named<S>, Product<S>>
 
@@ -141,6 +159,25 @@ export const restrictTo = <Y>(
                }),
             {}) as Pick<X, keyof Y>
 
+export const omit = <P extends Product>(
+   pr: P
+   ) => <Ks extends Array<keyof P>>(
+      ...ks: Ks)
+      : Omit<P, Ks[number]> =>
+         transform(
+            filter<Named<any>>(([key, _]) => ks.indexOf(key) === -1)
+         )(pr) as Omit<P, Ks[number]>
+
+export const pick = <P extends Product>(
+   pr: P
+   ) => <Ks extends Array<keyof P>>(
+      ...ks: Ks)
+      : Omit<P, Ks[number]> =>
+         transform(
+            filter<Named<any>>(([key, _]) => ks.indexOf(key) !== -1)
+         )(pr) as Omit<P, Ks[number]>
+
+
 // ---------------------------------------------------------------------------
 // Augmentation
 // ---------------------------------------------------------------------------
@@ -148,6 +185,7 @@ export const restrictTo = <Y>(
 const augmentation: Augmentation<Product.type, Product.augmented> =
    prod => ({
       ...asReducible(prod),
+      ...asAsyncReducible(prod),
       ...asTable(prod),
       map: fn => map(fn)(prod),
       mapNamed: fn => mapNamed(fn)(prod),
@@ -157,6 +195,7 @@ const higherType
    : Product.HigherType
    = {
       asReducible,
+      asAsyncReducible,
       collector,
       transform,
       map,

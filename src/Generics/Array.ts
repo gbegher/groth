@@ -11,11 +11,12 @@ declare module "../index" {
 
       export type HigherType =
          Collectible<Array.type, Identity.type>
-         & Transformable<Array.type>
          & Functor<Array.type>
 
-      export type AugmentedType<T> =
-         Reducible<T>
+      export type Augmented<S> =
+         Reducible<S>
+         & AsyncReducible<S>
+         & { map: <T>(fn: Mor<S, T>) => Array<T> }
 
       export const augmented = "Array.Augmented"
       export type augmented = typeof augmented
@@ -24,7 +25,7 @@ declare module "../index" {
    export namespace Generic {
       export interface Register<A1> {
          [Array.type]: Array<A1>
-         [Array.augmented]: Array.AugmentedType<A1>
+         [Array.augmented]: Array.Augmented<A1>
       }
    }
 }
@@ -38,39 +39,61 @@ import type {
    Identity,
    Collectible,
    Reducer,
+   AsyncReducer,
    Augmentation,
    Functor,
+   Mor,
 } from ".."
 
 import {
+   augment,
+   transducer,
    transformableFromCollectible,
-   augment
 } from ".."
-import { transducer } from "../Bivariates/Transducer"
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-const asReducible: Collectible<Array.type, Identity.type>["asReducible"] =
-   <S>(array: Array<S>) =>
+const asReducible: Collectible<Array.type, Identity.type>["asReducible"] = <S>(
+   items: Array<S>) =>
       ({
-         reduce: <T>
-            ({ init, step }: Reducer<S, T>)
-            : T =>
-               array.reduce(
-                  (t, s) => step(s, t),
-                  init())
+         reduce: <A>(
+            { init, step }: Reducer<S, A>) =>
+               {
+                  let acc: A = init()
+
+                  for(const s of items) {
+                     acc = step(s)(acc)
+                  }
+
+                  return acc
+               }
       })
 
-const collector: Collectible<Array.type, Identity.type>["collector"] =
-   <S>() =>
+const asAsyncReducible: Collectible<Array.type, Identity.type>["asAsyncReducible"] = <S>(
+   items: Array<S>) =>
       ({
-         init: () => [],
-         step:
-            (s, acc) =>
-               [...acc, s]
-      }) as Reducer<S, Array<S>>
+         reduceAsync: async <A>(
+            { init, step }: AsyncReducer<S, A>) =>
+               {
+                  let acc: A = await init()
+
+                  for(const s of items) {
+                     acc = await step(s)(acc)
+                  }
+
+                  return acc
+               }
+      })
+
+const collector: Collectible<Array.type, Identity.type>["collector"] = <S>() =>
+   ({
+      init: () => [],
+      step:
+         s => acc =>
+            [...acc, s]
+   }) as Reducer<S, Array<S>>
 
 const { transform } =
    transformableFromCollectible<Array.type, Identity.type>({
@@ -82,28 +105,29 @@ const map: Functor<Array.type>["map"] =
    mor =>
       transform(transducer.map(mor))
 
-
 // ---------------------------------------------------------------------------
 // Augmentation
 // ---------------------------------------------------------------------------
 
-const augmentation: Augmentation<Array.type, Array.augmented> =
-   <S>(x: Array<S>) =>
-      asReducible(x)
+const augmentation: Augmentation<Array.type, Array.augmented> = <S>(
+   arr: Array<S>) =>
+      ({
+         ...asReducible(arr),
+         ...asAsyncReducible(arr),
+         map: <T>(fn: Mor<S, T>) => map(fn)(arr),
+      })
 
-const higherType
-   : Array.HigherType
-   = {
-      asReducible,
-      collector,
-      transform,
-      map
-   }
+const higherType: Array.HigherType = {
+   asReducible,
+   asAsyncReducible,
+   collector,
+   map
+}
 
 export const array = augment<
       Array.type,
       Array.augmented,
-      typeof higherType
+      Array.HigherType
    >(
       augmentation,
       higherType

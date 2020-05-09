@@ -33,4 +33,4 @@ declare module "../index" {
 // Imports
 // ---------------------------------------------------------------------------
 
-import type { Product, Mor } from ".."
+import type {} from ".."

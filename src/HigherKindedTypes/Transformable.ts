@@ -40,7 +40,6 @@ import type {
    Transformable,
    Collectible,
    $,
-   Identity,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -52,14 +51,11 @@ import type {
 // ---------------------------------------------------------------------------
 
 export const transformableFromCollectible = <
-   F extends Generic,
-   X extends Generic
-   >
-   ({
-      asReducible,
-      collector
-   }: Collectible<F, X>)
-   : Transformable<F, X> =>
+      F extends Generic,
+      X extends Generic
+   >(
+      { asReducible, collector }: Pick<Collectible<F, X>, "asReducible" | "collector">
+   ): Transformable<F, X> =>
       ({
          transform:
             <S, T>(tr: Transducer<$<X, S>, $<X, T>>) =>
