@@ -17,6 +17,7 @@ declare module "../index" {
 
       export type Augmented<S> =
          Reducible<Named<S>>
+         & AsyncReducible<Named<S>>
          & Table<string, S>
          & { map: <T>(fn: Mor<S, T>) => Product<T> }
          & { mapNamed: <T>(fn: Mor<Named<S>, T>) => Product<T> }
@@ -56,6 +57,7 @@ import {
    Maybe,
    Functor,
    AsyncReducer,
+   AsyncReducible,
 } from ".."
 
 import {

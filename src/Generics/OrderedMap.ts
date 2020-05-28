@@ -4,9 +4,9 @@
 
 declare module "../index" {
    export type OrderedMap<T> = {
-         index: string[]
-         values: Product<T>
-      }
+      index: string[]
+      values: Product<T>
+   }
 
    export namespace OrderedMap {
       export const type = "OrderedMap"

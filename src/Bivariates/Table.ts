@@ -42,16 +42,16 @@ import type {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const has = <K, T extends Generic>
-   ({ has }: Table<K, T>) =>
+export const has = <K, T extends Generic>(
+   { has }: Table<K, T>) =>
       has
 
-export const get = <K, T extends Generic>
-   ({ get }: Table<K, T>) =>
+export const get = <K, T extends Generic>(
+   { get }: Table<K, T>) =>
       get
 
-export const asTable = <K, T extends Generic>
-   ({ asTable }: Table.Augmentor<K, T>) =>
+export const asTable = <K, T extends Generic>(
+   { asTable }: Table.Augmentor<K, T>) =>
       asTable
 
 // ---------------------------------------------------------------------------
