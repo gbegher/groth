@@ -50,6 +50,7 @@ import {
    forall,
    transformableFromCollectible,
 } from ".."
+import { asyncCollectorFromCollector } from "../HigherKindedTypes/Collectible"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -95,6 +96,9 @@ const collector: OrderedMap.HigherType["collector"] =
                })
       }) as Reducer<Named<S>, OrderedMap<S>>
 
+const asyncCollector: OrderedMap.HigherType["asyncCollector"] =
+   asyncCollectorFromCollector(collector)
+
 const { transform } = transformableFromCollectible<OrderedMap.type, Named.type>({
    asReducible,
    collector
@@ -131,6 +135,7 @@ const higherType
       asReducible,
       asAsyncReducible,
       collector,
+      asyncCollector,
       transform,
    }
 

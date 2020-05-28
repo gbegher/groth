@@ -18,6 +18,7 @@ declare module "../index" {
                & AsyncReducible.Augmentor<T, X>
                & {
                   collector: <S>() => Reducer<$<X, S>, $<T, S>>
+                  asyncCollector: <S>() => AsyncReducer<$<X, S>, $<T, S>>
                }
             : never : never
 
@@ -41,6 +42,10 @@ import type {
    Generic,
 } from ".."
 
+import {
+   asyncMor
+} from ".."
+
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
@@ -49,3 +54,21 @@ export const collector = <T extends Generic, X extends Generic>(
    { collector }: Collectible<T, X>
    ): Collectible<T, X>["collector"] =>
       collector
+
+export const asyncCollector = <T extends Generic, X extends Generic>(
+   { asyncCollector }: Collectible<T, X>
+   ): Collectible<T, X>["asyncCollector"] =>
+      asyncCollector
+
+export const asyncCollectorFromCollector = <T extends Generic, X extends Generic>(
+   collector: Collectible<T, X>["collector"]
+   ): Collectible<T, X>["asyncCollector"] =>
+      <S>() =>
+         {
+            const { init, step } = collector()
+
+            return {
+               init: async () => init(),
+               step: s => async acc => step(s)(acc)
+            }
+         }

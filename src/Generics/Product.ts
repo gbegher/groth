@@ -47,7 +47,7 @@ declare module "../index" {
 // Imports
 // ---------------------------------------------------------------------------
 
-import {
+import type {
    Collectible,
    Product,
    Reducer,
@@ -57,12 +57,12 @@ import {
    Maybe,
    Functor,
    AsyncReducer,
-   AsyncReducible,
 } from ".."
 
 import {
    augment,
    transformableFromCollectible,
+   asyncCollectorFromCollector,
    some,
    none,
    transducer,
@@ -127,6 +127,9 @@ const collector: Collectible<Product.type, Named.type>["collector"] =
             ([key, v]) => acc =>
                ({ ...acc, [key]: v })
       }) as Reducer<Named<S>, Product<S>>
+
+const asyncCollector: Collectible<Product.type, Named.type>["asyncCollector"] =
+   asyncCollectorFromCollector(collector)
 
 const { transform } = transformableFromCollectible<Product.type, Named.type>({
    asReducible,
@@ -199,6 +202,7 @@ const higherType
       asReducible,
       asAsyncReducible,
       collector,
+      asyncCollector,
       transform,
       map,
       mapNamed

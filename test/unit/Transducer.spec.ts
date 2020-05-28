@@ -127,7 +127,7 @@ context("The `Transducer` type", () => {
       })
    })
 
-   context.only("... is `Comprehendible`", () => {
+   context("... is `Comprehendible`", () => {
       type TestCase = {
          title: string,
          inputArray: number[]

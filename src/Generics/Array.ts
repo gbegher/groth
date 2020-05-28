@@ -50,6 +50,7 @@ import {
    transducer,
    transformableFromCollectible,
 } from ".."
+import { asyncCollectorFromCollector } from "../HigherKindedTypes/Collectible"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -95,6 +96,9 @@ const collector: Collectible<Array.type, Identity.type>["collector"] = <S>() =>
             [...acc, s]
    }) as Reducer<S, Array<S>>
 
+const asyncCollector: Collectible<Array.type, Identity.type>["asyncCollector"] =
+   asyncCollectorFromCollector(collector)
+
 const { transform } =
    transformableFromCollectible<Array.type, Identity.type>({
       asReducible,
@@ -121,6 +125,7 @@ const higherType: Array.HigherType = {
    asReducible,
    asAsyncReducible,
    collector,
+   asyncCollector,
    map
 }
 
