@@ -11,6 +11,14 @@ declare module "../index" {
    export namespace Reducer {
       export const type = "Reducer"
       export type type = typeof type
+
+      export type HigherType =
+         Extendable<Reducer.type>
+         & Nameable<Reducer.type>
+         & Comprehendible<Reducer.type>
+         & {
+            project: <S, T>(fn: Mor<S, T>, init: T) => Reducer<S, T>
+         }
    }
 
    export namespace Bivariate {
@@ -30,6 +38,7 @@ import type {
    Extendable,
    Nameable,
    Comprehendible,
+   Mor,
 } from ".."
 
 import {
@@ -107,18 +116,26 @@ const { comprehend } = defineComprehendible({
    extend
 })
 
+export const project = <S, T>(
+   fn: Mor<S, T>,
+   init: T
+   ): Reducer<S, T> =>
+      ({
+         init: () => init,
+         step: s => _ => fn(s)
+      })
+
 // ---------------------------------------------------------------------------
 // Augmentations
 // ---------------------------------------------------------------------------
 
 export const reducer
-   : Extendable<Reducer.type>
-   & Nameable<Reducer.type>
-   & Comprehendible<Reducer.type>
+   : Reducer.HigherType
    =
       {
          extend,
          hoist,
          liftName,
-         comprehend
+         comprehend,
+         project
       }

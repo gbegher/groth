@@ -11,6 +11,15 @@ declare module "../index" {
    export namespace AsyncReducer {
       export const type = "AsyncReducer"
       export type type = typeof type
+
+      export type HigherType =
+         Extendable<AsyncReducer.type>
+         & Nameable<AsyncReducer.type>
+         & Comprehendible<AsyncReducer.type>
+         & {
+            fromReducer: <S, T>(red: Reducer<S, T>) => AsyncReducer<S, T>,
+            project: <S, T>(fn: Mor<S, T>, init: T) => AsyncReducer<S, T>
+         }
    }
 
    export namespace Bivariate {
@@ -30,12 +39,17 @@ import type {
    Extendable,
    Nameable,
    Comprehendible,
+   Reducer,
+   Functor,
+   AsyncReducible,
+   Mor,
 } from ".."
 
 import {
    defineExtendable,
    defineComprehendible,
 } from ".."
+import { reducer } from "./Reducer"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -110,18 +124,32 @@ const { comprehend } = defineComprehendible({
    extend
 })
 
+const fromReducer = <S, A>(
+   { init, step }: Reducer<S, A>
+   ): AsyncReducer<S, A> =>
+      ({
+         init: async () => init(),
+         step: s => async acc => step(s)(acc)
+      })
+
+const project = <S, T>(
+   fn: Mor<S, T>,
+   init: T
+   ): AsyncReducer<S, T> =>
+      fromReducer(reducer.project(fn, init))
+
 // ---------------------------------------------------------------------------
 // Augmentations
 // ---------------------------------------------------------------------------
 
 export const asyncReducer
-   : Extendable<AsyncReducer.type>
-   & Nameable<AsyncReducer.type>
-   & Comprehendible<AsyncReducer.type>
+   : AsyncReducer.HigherType
    =
       {
          hoist,
          extend,
          liftName,
          comprehend,
+         fromReducer,
+         project
       }
