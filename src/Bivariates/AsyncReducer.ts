@@ -38,10 +38,7 @@ import type {
    Product,
    Extendable,
    Nameable,
-   Comprehendible,
    Reducer,
-   Functor,
-   AsyncReducible,
    Mor,
 } from ".."
 

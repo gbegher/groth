@@ -37,7 +37,6 @@ import type {
    Product,
    Extendable,
    Nameable,
-   Comprehendible,
    Mor,
 } from ".."
 
@@ -67,7 +66,7 @@ const { hoist, extend }: Extendable<Reducer.type> =
                init:
                   red.init,
                step:
-                  ([s, {}]: [S, {}]) => (acc: T) =>
+                  ([s, _]: [S, {}]) => (acc: T) =>
                      red.step(s)(acc)
             }),
       extend: <S, B extends Product, E extends Product>(

@@ -24,8 +24,8 @@ declare module "../index" {
       [k in CaseNames<S>]: Case<S, k>
    }
 
-   export type Matching<S extends Sum<any>, T> = {
-      [k in CaseNames<S>]: Mor<Case<S, k>, T>
+   export type Matching<S extends Sum<any>, T, C extends Bivariate=Mor.type> = {
+      [k in CaseNames<S>]: $2<C, Case<S, k>, T>
    }
 }
 
@@ -43,6 +43,7 @@ import type {
    Mor,
    CoDom,
    Dom,
+   AsyncMor,
 } from ".."
 
 import {
@@ -85,3 +86,8 @@ export const parallel = (
          ([k, mor]) =>
             x => sumCase(k, mor(x))
       ))
+
+export const matchAsync = async <S extends Sum<any>, T>(
+   s: S, matching: Matching<S, T, AsyncMor.type>
+   ): Promise<T> =>
+      matching[s.type as keyof Matching<S, T>](s.value)
