@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Array<S> = S[]
 
    export namespace Array {

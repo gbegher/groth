@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Mor<S, T> = (s: S) => T
 
    export namespace Mor {

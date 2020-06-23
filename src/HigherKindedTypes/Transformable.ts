@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Transformable<
       T extends Generic,
       X extends Generic=Identity.type

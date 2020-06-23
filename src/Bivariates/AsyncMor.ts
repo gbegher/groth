@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type AsyncMor<S, T> = (s: S) => Promise<T>
 
    export namespace AsyncMor {
@@ -31,7 +31,7 @@ import type {
    Extendable,
    Nameable,
    Comprehendible,
-} from ".."
+} from "../types"
 
 import {
    defineExtendable,

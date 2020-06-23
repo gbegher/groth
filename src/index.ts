@@ -1,5 +1,4 @@
-declare module "./index" {}
-
+export * from "./types"
 export * from "./util"
 
 // Core

@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type AsyncReducible<S> = {
       reduceAsync: <T>(reducer: AsyncReducer<S, T>) => Promise<T>
    }

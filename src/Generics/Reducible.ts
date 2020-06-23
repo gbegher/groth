@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Reducible<S> = {
       reduce: <T>(reducer: Reducer<S, T>) => T
    }

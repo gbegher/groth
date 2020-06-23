@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Named<T> = [string, T]
 
    export type CoKleisliNamed<A, B> = Mor<Named<A>, B>

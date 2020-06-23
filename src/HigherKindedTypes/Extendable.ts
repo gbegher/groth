@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module ".." {
+declare module "../types" {
    export type Extendable<C extends Bivariate> = {
       hoist: <S, T>(m: $2<C, S, T>) => $2<C, [S, {}], T>
       extend: {

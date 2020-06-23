@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module ".." {
+declare module "../types" {
    export type Nameable<C extends Bivariate> = {
       liftName: <K extends string>(
          k: K) => <S, T>(

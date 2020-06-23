@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type AsyncReducer<S, A> = {
       init: () => Promise<A>
       step: (s: S) => AsyncMor<A, A>

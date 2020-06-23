@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Table<K, T> = {
       has: (key: K) => boolean
       get: (key: K) => Maybe<T>

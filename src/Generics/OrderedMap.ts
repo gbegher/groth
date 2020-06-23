@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type OrderedMap<T> = {
       index: string[]
       values: Product<T>
@@ -42,7 +42,7 @@ import type {
    Reducer,
    AsyncReducer,
    Augmentation,
-} from ".."
+} from "../index"
 
 import {
    augment,

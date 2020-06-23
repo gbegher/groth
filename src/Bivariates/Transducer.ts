@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Transducer<S, T> = <A>(reducer: Reducer<T, A>) => Reducer<S, A>
 
    export namespace Transducer {

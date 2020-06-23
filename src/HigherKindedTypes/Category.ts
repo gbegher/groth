@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Category<C extends Bivariate> = {
       identity: Category.core<C>["identity"]
       compose: {

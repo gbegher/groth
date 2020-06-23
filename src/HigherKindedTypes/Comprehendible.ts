@@ -4,7 +4,7 @@
 
 type R<K extends string, T> = Record<K, T>
 
-declare module ".." {
+declare module "../types" {
    export type Comprehendible<C extends Bivariate> = {
       comprehend: {
             // Spread

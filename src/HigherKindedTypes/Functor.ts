@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Functor<
       F extends Generic,
       C1 extends Bivariate = Mor.type,

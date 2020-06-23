@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Generic = keyof Generic.Register<any>
 
    export namespace Generic {
@@ -33,4 +33,4 @@ declare module "../index" {
 // Imports
 // ---------------------------------------------------------------------------
 
-import type {} from ".."
+import type {} from "../types"

@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Maybe<T> = Sum<{
       NONE: undefined
       SOME: T

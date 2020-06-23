@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Sum<Cases extends Product> = ValueOf<SumMapping<Cases>>
 
    export type SumMapping<Cases extends Product> = {

@@ -1,4 +1,4 @@
-import type { Generic, $ } from ".."
+import type { Generic, $ } from "../types"
 
 export type Augmentation<T extends Generic, AT extends Generic> =
     <X>(x: $<T, X>) => $<AT, X>

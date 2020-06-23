@@ -2,7 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-declare module "../index" {
+declare module "../types" {
    export type Reducer<S, A> = {
       init: () => A
       step: (s: S) => Mor<A, A>
