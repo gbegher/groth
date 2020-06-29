@@ -66,7 +66,6 @@ import {
    some,
    none,
    transducer,
-   filter,
    named,
 } from ".."
 
@@ -170,7 +169,7 @@ export const omit = <P extends Product>(
       ...ks: Ks)
       : Omit<P, Ks[number]> =>
          transform(
-            filter<Named<any>>(([key, _]) => ks.indexOf(key) === -1)
+            transducer.filter<Named<any>>(([key, _]) => ks.indexOf(key) === -1)
          )(pr) as Omit<P, Ks[number]>
 
 export const pick = <P extends Product>(
@@ -179,7 +178,7 @@ export const pick = <P extends Product>(
       ...ks: Ks)
       : Omit<P, Ks[number]> =>
          transform(
-            filter<Named<any>>(([key, _]) => ks.indexOf(key) !== -1)
+            transducer.filter<Named<any>>(([key, _]) => ks.indexOf(key) !== -1)
          )(pr) as Omit<P, Ks[number]>
 
 

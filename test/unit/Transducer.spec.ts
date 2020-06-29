@@ -12,7 +12,6 @@ import type {
 import {
    transducer,
    array,
-   filter
 } from "../../src"
 
 const {
@@ -104,7 +103,7 @@ context("The `Transducer` type", () => {
             title: "a four element reducible through some a filtering extension",
             inputArray: [0, 1, 2, 3, 4],
             definition: [
-               hoist(transducer.liftName("filtered")(filter(x => x > 2))),
+               hoist(transducer.liftName("filtered")(transducer.filter(x => x > 2))),
             ],
             expectation: [
                { filtered: 3 },
@@ -149,7 +148,7 @@ context("The `Transducer` type", () => {
          ],
          ["three",
             transducer.compose(
-               filter(([_, { one }]) => one < 3),
+               transducer.filter(([_, { one }]) => one < 3),
                transducer.map(([_, { two }]) => two )
             )
          ],

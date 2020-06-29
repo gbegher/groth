@@ -8,6 +8,14 @@ declare module "../types" {
    export namespace Transducer {
       export const type = "Transducer"
       export type type = typeof type
+
+      export type HigherType =
+         Category<Transducer.type>
+         & Extendable<Transducer.type>
+         & Nameable<Transducer.type>
+         & Comprehendible<Transducer.type>
+         & Functor<Identity.type, Mor.type, Transducer.type>
+         & Filterable<Transducer.type>
    }
 
    export namespace Bivariate {
@@ -23,15 +31,11 @@ declare module "../types" {
 
 import type {
    Product,
-   Functor,
    Transducer,
    Mor,
    Reducer,
    Category,
-   Identity,
-   Extendable,
    Nameable,
-   Comprehendible,
 } from ".."
 
 import {
@@ -136,7 +140,7 @@ const { comprehend } = defineComprehendible({
 // Special constructors
 // ---------------------------------------------------------------------------
 
-export const filter = <S>(
+const filter = <S>(
    pred: Mor<S, boolean>
    ): Transducer<S, S> =>
       <A>(red: Reducer<S, A>) =>
@@ -151,19 +155,13 @@ export const filter = <S>(
 // Augmentations
 // ---------------------------------------------------------------------------
 
-export const transducer
-   : Category<Transducer.type>
-   & Extendable<Transducer.type>
-   & Nameable<Transducer.type>
-   & Comprehendible<Transducer.type>
-   & Functor<Identity.type, Mor.type, Transducer.type>
-   =
-      {
-         identity,
-         compose,
-         extend,
-         hoist,
-         map,
-         liftName,
-         comprehend,
-      }
+export const transducer: Transducer.HigherType = {
+   identity,
+   compose,
+   extend,
+   hoist,
+   map,
+   liftName,
+   comprehend,
+   filter,
+}
