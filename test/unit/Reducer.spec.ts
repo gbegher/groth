@@ -230,7 +230,11 @@ context("The `Reducer` type", () => {
          context(`When comprehending ${title}`, () => {
             const red = reducer.comprehend(...schema)
 
-            const result = array(input).reduce(red)
+            let result
+
+            beforeEach(() => {
+               result = array(input).reduce(red)
+            })
 
             it("should yield the expected result", () => {
                expect(result).to.deep.equal(expectation)

@@ -8,6 +8,11 @@ import {
 
 import { functorTestSuite } from "./TestSuites/FunctorTestSuite"
 
+const {
+   comprehend,
+   hoist,
+} = array
+
 context("The Array type", () => {
    context("... is a collectible", () => {
       const testCases: Array<number>[] = [
@@ -55,5 +60,87 @@ context("The Array type", () => {
          testCases,
          { hasAugmentor: true }
       )
+   })
+
+   context.only("... is `Comprehendible`", () => {
+      type TestCase = {
+         title: string
+         input: any
+         schema: [string, Array.Kleisli<any, any>][],
+         expectation: any
+      }
+
+      const testCases: TestCase[] = [
+         {
+            title: "the empty schema",
+            input: "input",
+            schema: [],
+            expectation: [{}]
+         },
+         {
+            title: "an identity schema",
+            input: "input",
+            schema: [
+               ["named", hoist(x => [x])]
+            ],
+            expectation: [
+               { "named": "input" }
+            ]
+         },
+         {
+            title: "a nested array",
+            input: "context",
+            schema: [
+               ["character",
+                  () => ["A", "B"]
+               ],
+               ["number",
+                  () => [1, 2]
+               ],
+               ["nested",
+                  ([s, { character, number }]) =>
+                     [`${s}--character:${character}--number:${number}`]
+               ]
+            ],
+            expectation: [
+               {
+                  character: "A",
+                  number: 1,
+                  nested: "context--character:A--number:1",
+               },
+               {
+                  character: "A",
+                  number: 2,
+                  nested: "context--character:A--number:2",
+               },
+               {
+                  character: "B",
+                  number: 1,
+                  nested: "context--character:B--number:1",
+               },
+               {
+                  character: "B",
+                  number: 2,
+                  nested: "context--character:B--number:2",
+               },
+            ]
+         }
+      ]
+
+      testCases.forEach(({ title, input, schema, expectation }) => {
+         context(`When comprehening ${title}`, () => {
+            const construction = comprehend(...schema)
+
+            let result
+
+            beforeEach(() => {
+               result = construction(input)
+            })
+
+            it("should yield the expected result", () => {
+               expect(result).to.deep.equal(expectation)
+            })
+         })
+      })
    })
 })

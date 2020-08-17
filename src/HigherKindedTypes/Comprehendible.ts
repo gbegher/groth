@@ -184,5 +184,5 @@ export const defineComprehendible = <C extends Bivariate>(
             ) =>
                extend(
                   ...schema.map(
-                        ([key, c]) => liftName(key)(c)))
+                     ([key, c]) => liftName(key)(c)))
       })

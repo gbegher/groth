@@ -261,7 +261,7 @@ context("The `AsyncReducer` type", () => {
 
             let result
 
-            before(async () => {
+            beforeEach(async () => {
                result = await array(input).reduceAsync(red)
             })
 

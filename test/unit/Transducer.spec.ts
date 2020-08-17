@@ -117,7 +117,11 @@ context("The `Transducer` type", () => {
             const extendedTransducer: Transducer<number, Product> = extend(...definition)
             const transduced = extendedTransducer(inputReducer)
 
-            const result = array(inputArray).reduce(transduced)
+            let result
+
+            beforeEach(() => {
+               result = array(inputArray).reduce(transduced)
+            })
 
             it("should yield the expected result", () => {
                expect(result).to.deep.equal(expectation)
@@ -188,7 +192,11 @@ context("The `Transducer` type", () => {
          context(`When comprehending ${title}`, () => {
             const red = transducer.comprehend(...schema)(inputReducer)
 
-            const result = array(inputArray).reduce(red)
+            let result
+
+            beforeEach(() => {
+               result = array(inputArray).reduce(red)
+            })
 
             it("should yield the expected result", () => {
                expect(result).to.deep.equal(expectation)

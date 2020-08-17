@@ -140,7 +140,11 @@ context("The `Mor` type", () => {
 
             const construction = extend(...definitions)
 
-            const result = construction(input)
+            let result
+
+            before(() => {
+               result = construction(input)
+            })
 
             it("should yield the expected result", () => {
                expect(result).to.deep.equal(expectation)
@@ -186,7 +190,11 @@ context("The `Mor` type", () => {
          context(`When comprehending ${title}`, () => {
             const construction = comprehend(...schema)
 
-            const result = construction(input)
+            let result
+
+            beforeEach(() => {
+               result = construction(input)
+            })
 
             it("should yield the expected result", () => {
                expect(result).to.deep.equal(expectation)
