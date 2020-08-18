@@ -71,8 +71,6 @@ import {
    defineExtendable,
 } from ".."
 
-import { llog } from "../util"
-
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
@@ -150,33 +148,17 @@ const { extend, hoist }: Extendable<Array.kleisli> =
          extension: Array.Kleisli<[S, B], E>
          ): Array.Kleisli<S, B & E> =>
             (s: S) =>
-               {
-                  return array(base(s)).reduce({
-                     init: () => [] as Array<B & E>,
-                     step:
-                        b => acc =>
-                           {
-                              llog({
-                                 acc,
-                                 b,
-                                 ext: extension([s, b]),
-                                 new: extension([s, b]).map(
-                                    e => {
-                                       llog({s, b, e}, "extending")
-                                       return ({ ...b, ...e })
-                                    }
-                                 )
-                              })
-
-                              return [
-                                 ...acc,
-                                 ...extension([s, b]).map(
-                                    e => ({...b, ...e })
-                                 )
-                              ]
-                           }
-                  })
-               }
+               array(base(s)).reduce({
+                  init: () => [] as Array<B & E>,
+                  step:
+                     b => acc =>
+                        [
+                           ...acc,
+                           ...extension([s, b]).map(
+                              e => ({...b, ...e })
+                           )
+                        ]
+               })
    })
 
 const { comprehend } = defineComprehendible<Array.kleisli>({
