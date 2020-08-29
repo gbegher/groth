@@ -39,18 +39,12 @@ import { match } from ".."
 export const some = <T>
    (value: T)
    : Maybe<T> =>
-      ({
-         type: "SOME",
-         value
-      })
+      ["SOME", value]
 
 export const none = <T>
    ()
    : Maybe<T> =>
-      ({
-         type: "NONE",
-         value: undefined
-      })
+      ["NONE", undefined]
 
 const map = <S, T>
    (fn: Mor<S, T>)

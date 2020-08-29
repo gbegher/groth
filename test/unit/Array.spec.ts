@@ -62,7 +62,7 @@ context("The Array type", () => {
       )
    })
 
-   context.only("... is `Comprehendible`", () => {
+   context("... is `Comprehendible`", () => {
       type TestCase = {
          title: string
          input: any
