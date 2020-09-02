@@ -11,6 +11,7 @@ declare module "../types" {
 
       export type HigherType =
          Collectible<Array.type, Identity.type>
+         & Transformable<Array.type>
          & Functor<Array.type>
          & Nameable<Array.kleisli>
          & Extendable<Array.kleisli>
@@ -19,7 +20,10 @@ declare module "../types" {
       export type Augmented<S> =
          Reducible<S>
          & AsyncReducible<S>
-         & { map: <T>(fn: Mor<S, T>) => Array<T> }
+         & {
+            transform: <T>(fn: Transducer<S, T>) => Array<T>
+            map: <T>(fn: Mor<S, T>) => Array<T>
+         }
 
       export const augmented = "Array.Augmented"
       export type augmented = typeof augmented
@@ -52,6 +56,7 @@ import type {
    Array,
    Identity,
    Collectible,
+   Transducer,
    Reducer,
    AsyncReducer,
    Augmentation,
@@ -166,6 +171,21 @@ const { comprehend } = defineComprehendible<Array.kleisli>({
    extend,
 })
 
+export const range = (n: number, m:number=0, step=1): Array<number> =>
+   {
+      const result = []
+
+      const lowerBound = Math.min(m, n)
+      const upperBound = Math.max(m, n)
+      const inc = Math.abs(step)
+
+      for (let i = lowerBound ; i < upperBound ; i = i + inc) {
+         result.push(i)
+      }
+
+      return result
+   }
+
 // ---------------------------------------------------------------------------
 // Augmentation
 // ---------------------------------------------------------------------------
@@ -175,6 +195,7 @@ const augmentation: Augmentation<Array.type, Array.augmented> = <S>(
       ({
          ...asReducible(arr),
          ...asAsyncReducible(arr),
+         transform: <T>(tr: Transducer<S, T>) => transform(tr)(arr),
          map: <T>(fn: Mor<S, T>) => map(fn)(arr),
       })
 
@@ -183,6 +204,7 @@ const higherType: Array.HigherType = {
    asAsyncReducible,
    collector,
    asyncCollector,
+   transform,
    map,
    liftName,
    extend,
