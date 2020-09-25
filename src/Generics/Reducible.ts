@@ -8,6 +8,23 @@ declare module "../types" {
    }
 
    export namespace Reducible {
+      export const type = "Reducible"
+      export type type = typeof type
+
+      export type HigherType =
+         Functor<Reducible.type, Mor.type, Mor.type>
+         & Transformable<Reducible.type>
+
+      export type Augmented<S> =
+         Reducible<S>
+         & {
+            transform: <T>(fn: Transducer<S, T>) => Reducible<T>
+            map: <T>(fn: Mor<S, T>) => Reducible<T>
+         }
+
+      export const augmented = "Reducible.Augmented"
+      export type augmented = typeof augmented
+
       export type Augmentor<F, X> =
          F extends Generic ?
          X extends Generic
@@ -17,9 +34,6 @@ declare module "../types" {
                }
             : never : never
 
-      export const type = "Reducible"
-      export type type = typeof type
-
       export const augmentor = "Reducible.Augmentor"
       export type augmentor = typeof augmentor
    }
@@ -27,6 +41,7 @@ declare module "../types" {
    export namespace Generic {
       export interface Register<A1> {
          [Reducible.type]: Reducible<A1>
+         [Reducible.augmented]: Reducible.Augmented<A1>
       }
    }
 
@@ -44,11 +59,15 @@ declare module "../types" {
 import type {
    Reducible,
    Mor,
-   Functor,
    Generic,
+   Transducer,
+   Augmentation
 } from ".."
 
-import { transducer } from ".."
+import {
+   transducer,
+   augment,
+} from ".."
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -65,16 +84,22 @@ export const asReducible = <
    ({ asReducible }: Reducible.Augmentor<T, X>) =>
       asReducible
 
+const transform = <S, T>(
+   tr: Transducer<S, T>
+   ) => (
+      reducible: Reducible<S>
+      ): Reducible<T> =>
+         ({
+            reduce:
+               reducer =>
+                  reducible.reduce(tr(reducer))
+         })
+
 const map = <S, T>
    (fn: Mor<S, T>)
    : Mor<Reducible<S>, Reducible<T>> =>
       reducible =>
-         ({
-            reduce:
-               reducer =>
-                  reducible.reduce(
-                     transducer.map(fn)(reducer))
-         })
+         transform(transducer.map(fn))(reducible)
 
 // ---------------------------------------------------------------------------
 // Utility functions
@@ -106,8 +131,24 @@ export const exists = <S>(
 // Augmentation
 // ---------------------------------------------------------------------------
 
-export const reducible:
-   Functor<Reducible.type, Mor.type, Mor.type> =
-      {
-         map
-      }
+const augmentation: Augmentation<Reducible.type, Reducible.augmented> = <S>(
+   rs: Reducible<S>) =>
+      ({
+         reduce: rs.reduce,
+         transform: <T>(tr: Transducer<S, T>) => transform(tr)(rs),
+         map: <T>(fn: Mor<S, T>) => map(fn)(rs),
+      })
+
+const higherType: Reducible.HigherType = {
+   map,
+   transform
+}
+
+export const reducible = augment<
+      Reducible.type,
+      Reducible.augmented,
+      Reducible.HigherType
+   >(
+      augmentation,
+      higherType
+   )
