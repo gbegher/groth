@@ -100,7 +100,7 @@ const { comprehend } = defineComprehendible({
 
 export const asyncMor
    : Category<AsyncMor.type>
-   & Functor<Identity.type, AsyncMor.type, AsyncMor.type>
+   & Functor<Identity.type, Mor.type, AsyncMor.type>
    & Extendable<AsyncMor.type>
    & Nameable<AsyncMor.type>
    & Comprehendible<AsyncMor.type>
