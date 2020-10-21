@@ -31,6 +31,7 @@ import type {
 } from ".."
 
 import { match } from ".."
+import { component } from "../Core/Sum"
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -39,12 +40,12 @@ import { match } from ".."
 export const some = <T>
    (value: T)
    : Maybe<T> =>
-      ["SOME", value]
+      component("SOME", value)
 
 export const none = <T>
    ()
    : Maybe<T> =>
-      ["NONE", undefined]
+      component("NONE", undefined)
 
 const map = <S, T>
    (fn: Mor<S, T>)

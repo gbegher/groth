@@ -5,7 +5,7 @@ import {
    Product,
    Mor,
    parallel,
-   sumCase,
+   component,
    codiagonal,
 } from "../../src"
 
@@ -54,7 +54,7 @@ context("The Sum type", () => {
 
             Object.keys(inputs).forEach(key => {
                it(`should map \`${key}\` correctly`, () => {
-                  const output = cod(sumCase(key, inputs[key]))
+                  const output = cod(component(key, inputs[key]))
 
                   expect(output).to.deep.equal(outputs[key])
                })
@@ -107,8 +107,8 @@ context("The Sum type", () => {
 
             Object.keys(inputs).forEach(key => {
                it(`should map \`${key}\` correctly`, () => {
-                  const output = par(sumCase(key, inputs[key]))
-                  const expected = sumCase(key, outputs[key])
+                  const output = par(component(key, inputs[key]))
+                  const expected = component(key, outputs[key])
 
                   expect(output).to.deep.equal(expected)
                })
