@@ -63,11 +63,7 @@ const { identity, compose }: Category<AsyncTransducer.type> = defineCategory({
 const map = <S, T>(
    mor: Mor<S, T>
    ): AsyncTransducer<S, T> =>
-      <A>(red: AsyncReducer<T, A>) =>
-         ({
-            ...red,
-            step: (s: S) => (acc: A) => red.step(mor(s))(acc)
-         })
+      mapAsync(async (s: S) => mor(s))
 
 const { hoist, extend } = defineExtendable<AsyncTransducer.type>({
    initial:
@@ -156,16 +152,7 @@ const mapAsync = <S, T>(
 const filter = <S>(
    pred: Mor<S, boolean>
    ): AsyncTransducer<S, S> =>
-      <A>(red: AsyncReducer<S, A>) =>
-         ({
-            init: async () => red.init(),
-            step:
-               (s: S) =>
-                  async(acc: A) =>
-                     pred(s)
-                        ? (await red.step(s)(acc))
-                        : acc
-         })
+      filterAsync(async (s: S) => pred(s))
 
 const filterAsync = <S>(
    pred: AsyncMor<S, boolean>
