@@ -13,6 +13,7 @@ declare module "../types" {
          Functor<Product.type>
          & Collectible<Product.type, Named.type>
          & Transformable<Product.type, Named.type>
+         & AsyncTransformable<Product.type, Named.type>
          & { mapNamed: Functor<Product.type, Named.cokleisli, Mor.type>["map"] }
 
       export type Augmented<S> =
@@ -20,6 +21,7 @@ declare module "../types" {
          & AsyncReducible<Named<S>>
          & Table<string, S>
          & { transform: <T>(tr: Transducer<Named<S>, Named<T>>) => Product<T> }
+         & { transformAsync: <T>(tr: AsyncTransducer<Named<S>, Named<T>>) => Promise<Product<T>> }
          & { map: <T>(fn: Mor<S, T>) => Product<T> }
          & { mapNamed: <T>(fn: Mor<Named<S>, T>) => Product<T> }
 
@@ -68,6 +70,7 @@ import {
    none,
    transducer,
    named,
+   asyncTransformableFromCollectible,
 } from ".."
 
 // ---------------------------------------------------------------------------
@@ -135,6 +138,11 @@ const { transform } = transformableFromCollectible<Product.type, Named.type>({
    collector
 })
 
+const { transformAsync } = asyncTransformableFromCollectible<Product.type, Named.type>({
+   asAsyncReducible,
+   asyncCollector
+})
+
 const map: Functor<Product.type>["map"] =
    mor =>
       transform(
@@ -192,6 +200,7 @@ const augmentation: Augmentation<Product.type, Product.augmented> =
       ...asAsyncReducible(prod),
       ...asTable(prod),
       transform: tr => transform(tr)(prod),
+      transformAsync: tr => transformAsync(tr)(prod),
       map: fn => map(fn)(prod),
       mapNamed: fn => mapNamed(fn)(prod),
    })
@@ -204,6 +213,7 @@ const higherType
       collector,
       asyncCollector,
       transform,
+      transformAsync,
       map,
       mapNamed
    }

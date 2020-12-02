@@ -4,21 +4,21 @@
 
 declare module "../types" {
    export type Collectible<
-      T extends Generic,
+      F extends Generic,
       X extends Generic
       > =
-         $2<Collectible.type, T, X>
+         $2<Collectible.type, F, X>
 
    export namespace Collectible {
-      export type _Collectible<T, X> =
-         T extends Generic ?
+      export type _Collectible<F, X> =
+         F extends Generic ?
          X extends Generic
             ?
-               Reducible.Augmentor<T, X>
-               & AsyncReducible.Augmentor<T, X>
+               Reducible.Augmentor<F, X>
+               & AsyncReducible.Augmentor<F, X>
                & {
-                  collector: <S>() => Reducer<$<X, S>, $<T, S>>
-                  asyncCollector: <S>() => AsyncReducer<$<X, S>, $<T, S>>
+                  collector: <S>() => Reducer<$<X, S>, $<F, S>>
+                  asyncCollector: <S>() => AsyncReducer<$<X, S>, $<F, S>>
                }
             : never : never
 
