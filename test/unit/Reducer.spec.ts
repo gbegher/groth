@@ -9,6 +9,7 @@ import type {
 
 import {
    reducer,
+   transducer,
    array,
    forall,
 } from "../../src"
@@ -53,7 +54,8 @@ const memoizeDefinitions = (
 
 const {
    hoist,
-   extend
+   extend,
+   liftName,
 } = reducer
 
 context("The `Reducer` type", () => {
@@ -123,6 +125,35 @@ context("The `Reducer` type", () => {
                   { inp: 1, one: [{ v: 0 }, { v: 2 }] },
                   { inp: 2, one: [{ v: 0 }, { v: 2 }, { v: 4 }] },
                ]
+            }
+         },
+         {
+            title: "an extension involving filters",
+            input: [0, 1, 2, 3, 4],
+            definition: [
+               liftName("all")(hoist<any, any>(
+                  {
+                     init: () => [],
+                     step: inp => acc => [...acc, inp]
+                  }
+               )),
+               liftName("big")(hoist<any, any>(
+                  transducer.filter(i => i > 2)({
+                     init: () => [],
+                     step: inp => acc => [...acc, inp]
+                  })
+               )),
+               liftName("sml")(hoist<any, any>(
+                  transducer.filter(i => i <= 2)({
+                     init: () => [],
+                     step: inp => acc => [...acc, inp]
+                  })
+               )),
+            ],
+            expectation: {
+               all: [0, 1, 2, 3, 4],
+               big: [3, 4],
+               sml: [0, 1, 2],
             }
          },
       ]
