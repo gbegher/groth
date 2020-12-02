@@ -19,6 +19,7 @@ declare module "../types" {
          Reducible<Named<S>>
          & AsyncReducible<Named<S>>
          & Table<string, S>
+         & { transform: <T>(tr: Transducer<Named<S>, Named<T>>) => Product<T> }
          & { map: <T>(fn: Mor<S, T>) => Product<T> }
          & { mapNamed: <T>(fn: Mor<Named<S>, T>) => Product<T> }
 
@@ -115,7 +116,6 @@ const asAsyncReducible: Collectible<Product.type, Named.type>["asAsyncReducible"
 
                   return acc
                }
-
       })
 
 const collector: Collectible<Product.type, Named.type>["collector"] =
@@ -191,6 +191,7 @@ const augmentation: Augmentation<Product.type, Product.augmented> =
       ...asReducible(prod),
       ...asAsyncReducible(prod),
       ...asTable(prod),
+      transform: tr => transform(tr)(prod),
       map: fn => map(fn)(prod),
       mapNamed: fn => mapNamed(fn)(prod),
    })
