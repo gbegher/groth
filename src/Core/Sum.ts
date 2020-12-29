@@ -56,6 +56,13 @@ export const match = <S extends Sum<any>, T>(
    : T =>
       matching[type as keyof Matching<S, T>](value)
 
+export const matchWith = <S extends Sum<any>, T>(
+   matching: Matching<S, T>
+   ) => (
+      input: S
+      ): T =>
+         match(input, matching)
+
 export const component = <K extends string, T>(
    type: K,
    value: T
