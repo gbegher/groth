@@ -6,7 +6,7 @@ declare module "../types" {
    export type AsyncMor<S, T> = (s: S) => Promise<T>
 
    export namespace AsyncMor {
-      export const type = "AsyncMor"
+      export const type: unique symbol
       export type type = typeof type
    }
 
@@ -89,7 +89,7 @@ const liftName: Nameable<AsyncMor.type>["liftName"] = <K extends string>(
          async (s: S) =>
             ({ [k]: await asmor(s) } as Record<K, T>)
 
-const { comprehend } = defineComprehendible({
+const { comprehend } = defineComprehendible<AsyncMor.type>({
    liftName,
    extend
 })

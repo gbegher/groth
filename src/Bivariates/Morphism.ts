@@ -6,7 +6,7 @@ declare module "../types" {
    export type Mor<S, T> = (s: S) => T
 
    export namespace Mor {
-      export const type = "Mor"
+      export const type: unique symbol
       export type type = typeof type
    }
 
@@ -19,7 +19,7 @@ declare module "../types" {
    export type Identity<S> = S
 
    export namespace Identity {
-      export const type = "Identity"
+      export const type: unique symbol
       export type type = typeof type
    }
 
@@ -104,7 +104,7 @@ const { hoist, extend }: Extendable<Mor.type> =
                }
    })
 
-const { comprehend } = defineComprehendible({
+const { comprehend } = defineComprehendible<Mor.type>({
    liftName,
    extend
 })

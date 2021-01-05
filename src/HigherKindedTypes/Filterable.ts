@@ -26,10 +26,7 @@ import {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const filter = <
-      C extends Bivariate,
-      FC extends Bivariate=Mor.type
-   >(
+export const filter = <C extends Bivariate, FC extends Bivariate=Mor.type>(
    { filter }: Filterable<C, FC>
    ): Filterable<C, FC>["filter"] =>
       filter

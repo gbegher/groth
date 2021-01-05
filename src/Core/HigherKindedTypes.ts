@@ -6,9 +6,7 @@ declare module "../types" {
    export type Generic = keyof Generic.Register<any>
 
    export namespace Generic {
-      export interface Register<A1> {
-         [k: string]: any
-      }
+      export interface Register<A1> {}
 
       export type $<H extends Generic, A1> =
          Register<A1>[H]
@@ -17,9 +15,7 @@ declare module "../types" {
    export type Bivariate = keyof Bivariate.Register<any, any>
 
    export namespace Bivariate {
-      export interface Register<A1, A2> {
-         [k: string]: any
-      }
+      export interface Register<A1, A2> {}
 
       export type $2<H extends Bivariate, A1, A2> =
          Register<A1, A2>[H]

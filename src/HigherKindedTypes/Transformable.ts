@@ -26,7 +26,7 @@ declare module "../types" {
                }
             : never : never : never
 
-      export const type = "Transformable"
+      export const type: unique symbol
       export type type = typeof type
    }
 
@@ -40,7 +40,7 @@ declare module "../types" {
                }
             : never : never
 
-      export const type = "AsyncTransformable"
+      export const type: unique symbol
       export type type = typeof type
    }
 

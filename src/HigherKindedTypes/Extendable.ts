@@ -196,7 +196,7 @@ export const defineExtendable = <C extends Bivariate>(
          hoist,
          extend:
             <S>(...extensions: $2<C, [S, Product], Product>[]) =>
-               array(extensions).reduce<$2<C, [S, Product], Product>>({
+               array(extensions).reduce({
                   init: () => initial<S>(),
                   step:
                      ext => acc =>

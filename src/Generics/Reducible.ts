@@ -8,7 +8,7 @@ declare module "../types" {
    }
 
    export namespace Reducible {
-      export const type = "Reducible"
+      export const type: unique symbol
       export type type = typeof type
 
       export type HigherType =
@@ -22,32 +22,18 @@ declare module "../types" {
             map: <T>(fn: Mor<S, T>) => Reducible<T>
          }
 
-      export const augmented = "Reducible.Augmented"
+      export const augmented: unique symbol
       export type augmented = typeof augmented
 
-      export type Augmentor<F, X> =
-         F extends Generic ?
-         X extends Generic
-            ?
-               {
-                  asReducible: <S>(fs: $<F, S>) => Reducible<$<X, S>>
-               }
-            : never : never
-
-      export const augmentor = "Reducible.Augmentor"
-      export type augmentor = typeof augmentor
+      export type Augmentor<F extends Generic, X extends Generic> = {
+         asReducible: <S>(fs: $<F, S>) => Reducible<$<X, S>>
+      }
    }
 
    export namespace Generic {
       export interface Register<A1> {
          [Reducible.type]: Reducible<A1>
          [Reducible.augmented]: Reducible.Augmented<A1>
-      }
-   }
-
-   export namespace Bivariate {
-      export interface Register<A1, A2> {
-         [Reducible.augmentor]: Reducible.Augmentor<A1, A2>
       }
    }
 }

@@ -9,7 +9,7 @@ declare module "../types" {
    }>
 
    export namespace Maybe {
-      export const type = "Maybe"
+      export const type: unique symbol
       export type type = typeof type
    }
 

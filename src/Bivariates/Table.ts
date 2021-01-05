@@ -9,22 +9,17 @@ declare module "../types" {
    }
 
    export namespace Table {
-      export type Augmentor<K, T> =
-         T extends Generic
-            ? { asTable: <S>(t: $<T, S>) => Table<K, S> }
-            : never
+      export type Augmentor<K, T extends Generic> = {
+         asTable: <S>(t: $<T, S>) => Table<K, S>
+      }
 
-      export const type = "Table"
+      export const type: unique symbol
       export type type = typeof type
-
-      export const augmentor = "Table.Augmentor"
-      export type augmentor = typeof augmentor
    }
 
    export namespace Bivariate {
       export interface Register<A1, A2> {
          [Table.type]: Table<A1, A2>
-         [Table.augmentor]: Table.Augmentor<A1, A2>
       }
    }
 }

@@ -22,8 +22,6 @@ declare module "../types" {
                map: <T>(mor: $2<C1, S, T>) => $<F, T>
             }
    }
-
-
 }
 
 // ---------------------------------------------------------------------------
@@ -45,7 +43,7 @@ export const map = <
       F extends Generic,
       C1 extends Bivariate = Mor.type,
       C2 extends Bivariate = Mor.type
-   >
-   ({ map }: Functor<F, C1, C2>)
-   : Functor<F, C1, C2>["map"] =>
-      map
+   >(
+      { map }: Functor<F, C1, C2>
+      ): Functor<F, C1, C2>["map"] =>
+         map

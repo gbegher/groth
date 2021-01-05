@@ -6,7 +6,7 @@ declare module "../types" {
    export type Product<T = any> = Record<string, T>
 
    export namespace Product {
-      export const type = "Product"
+      export const type: unique symbol
       export type type = typeof type
 
       export type HigherType =
@@ -25,7 +25,7 @@ declare module "../types" {
          & { map: <T>(fn: Mor<S, T>) => Product<T> }
          & { mapNamed: <T>(fn: Mor<Named<S>, T>) => Product<T> }
 
-      export const augmented = "Product.Augmented"
+      export const augmented: unique symbol
       export type augmented = typeof augmented
    }
 
@@ -84,7 +84,7 @@ const asTable = <S>(
          const has =
             (s: string)
             : boolean =>
-               Object.getOwnPropertyNames(product).indexOf(s) != 1
+               Object.getOwnPropertyNames(product).indexOf(s) != -1
 
          const get =
             (s: string)
@@ -121,17 +121,16 @@ const asAsyncReducible: Collectible<Product.type, Named.type>["asAsyncReducible"
                }
       })
 
-const collector: Collectible<Product.type, Named.type>["collector"] =
-   <S>() =>
+const collector = <S>(
+   ): Reducer<Named<S>, Product<S>> =>
       ({
          init: () => ({}),
          step:
             ([key, v]) => acc =>
                ({ ...acc, [key]: v })
-      }) as Reducer<Named<S>, Product<S>>
+      })
 
-const asyncCollector: Collectible<Product.type, Named.type>["asyncCollector"] =
-   asyncCollectorFromCollector(collector)
+const asyncCollector = asyncCollectorFromCollector<Product.type, Named.type>(collector)
 
 const { transform } = transformableFromCollectible<Product.type, Named.type>({
    asReducible,

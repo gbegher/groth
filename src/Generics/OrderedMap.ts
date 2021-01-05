@@ -9,7 +9,7 @@ declare module "../types" {
    }
 
    export namespace OrderedMap {
-      export const type = "OrderedMap"
+      export const type: unique symbol
       export type type = typeof type
 
       export type HigherType =
@@ -20,7 +20,7 @@ declare module "../types" {
       export type AugmentedType<T> =
          Reducible<Named<T>>
 
-      export const augmented = "OrderedMap.Augmented"
+      export const augmented: unique symbol
       export type augmented = typeof augmented
    }
 
@@ -96,8 +96,9 @@ const collector: OrderedMap.HigherType["collector"] =
                })
       }) as Reducer<Named<S>, OrderedMap<S>>
 
-const asyncCollector: OrderedMap.HigherType["asyncCollector"] =
-   asyncCollectorFromCollector(collector)
+const asyncCollector = asyncCollectorFromCollector<OrderedMap.type, Named.type>(
+   collector
+)
 
 const { transform } = transformableFromCollectible<OrderedMap.type, Named.type>({
    asReducible,

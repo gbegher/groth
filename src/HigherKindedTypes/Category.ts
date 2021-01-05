@@ -6,7 +6,7 @@ declare module "../types" {
    export type Category<C extends Bivariate> = {
       identity: Category.core<C>["identity"]
       compose: {
-         <S>(...args: $2<C, S, any>): $2<C, S, any>
+         <S>(...args: $2<C, S, any>[]): $2<C, S, any>
 
          <S>(): $2<C, S, S>
 
@@ -126,7 +126,7 @@ export const defineCategory = <C extends Bivariate>(
                array(args).reduce({
                   init: identity,
                   step:
-                     m => acc =>
+                     m => (acc: $2<C, S, any>) =>
                         compose(acc, m)
                })
       })

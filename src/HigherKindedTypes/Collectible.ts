@@ -7,30 +7,12 @@ declare module "../types" {
       F extends Generic,
       X extends Generic
       > =
-         $2<Collectible.type, F, X>
-
-   export namespace Collectible {
-      export type _Collectible<F, X> =
-         F extends Generic ?
-         X extends Generic
-            ?
-               Reducible.Augmentor<F, X>
-               & AsyncReducible.Augmentor<F, X>
-               & {
-                  collector: <S>() => Reducer<$<X, S>, $<F, S>>
-                  asyncCollector: <S>() => AsyncReducer<$<X, S>, $<F, S>>
-               }
-            : never : never
-
-      export const type = "Collectible"
-      export type type = typeof type
-   }
-
-   export namespace Bivariate {
-      export interface Register<A1, A2> {
-         [Collectible.type]: Collectible._Collectible<A1, A2>
-      }
-   }
+         Reducible.Augmentor<F, X>
+         & AsyncReducible.Augmentor<F, X>
+         & {
+            collector: <S>() => Reducer<$<X, S>, $<F, S>>
+            asyncCollector: <S>() => AsyncReducer<$<X, S>, $<F, S>>
+         }
 }
 
 // ---------------------------------------------------------------------------
@@ -41,27 +23,28 @@ import type {
    Collectible,
    Generic,
 } from ".."
+import { $, AsyncReducer, Reducer } from "../types"
 
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
-export const collector = <T extends Generic, X extends Generic>(
-   { collector }: Collectible<T, X>
-   ): Collectible<T, X>["collector"] =>
+export const collector = <F extends Generic, X extends Generic>(
+   { collector }: Collectible<F, X>
+   ): Collectible<F, X>["collector"] =>
       collector
 
-export const asyncCollector = <T extends Generic, X extends Generic>(
-   { asyncCollector }: Collectible<T, X>
-   ): Collectible<T, X>["asyncCollector"] =>
+export const asyncCollector = <F extends Generic, X extends Generic>(
+   { asyncCollector }: Collectible<F, X>
+   ): Collectible<F, X>["asyncCollector"] =>
       asyncCollector
 
-export const asyncCollectorFromCollector = <T extends Generic, X extends Generic>(
-   collector: Collectible<T, X>["collector"]
-   ): Collectible<T, X>["asyncCollector"] =>
-      <S>() =>
+export const asyncCollectorFromCollector = <F extends Generic, X extends Generic>(
+   collector: Collectible<F, X>["collector"]
+   ): Collectible<F, X>["asyncCollector"] =>
+      <S>(): AsyncReducer<$<X, S>, $<F, S>> =>
          {
-            const { init, step } = collector()
+            const { init, step } = collector<S>()
 
             return {
                init: async () => init(),

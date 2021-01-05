@@ -6,7 +6,7 @@ declare module "../types" {
    export type Array<S> = S[]
 
    export namespace Array {
-      export const type = "Array"
+      export const type: unique symbol
       export type type = typeof type
 
       export type HigherType =
@@ -25,12 +25,12 @@ declare module "../types" {
             map: <T>(fn: Mor<S, T>) => Array<T>
          }
 
-      export const augmented = "Array.Augmented"
+      export const augmented: unique symbol
       export type augmented = typeof augmented
 
       export type Kleisli<A1, A2> = Mor<A1, Array<A2>>
 
-      export const kleisli = "Array.kleisli"
+      export const kleisli: unique symbol
       export type kleisli = typeof kleisli
    }
 
@@ -120,8 +120,7 @@ const collector: Collectible<Array.type, Identity.type>["collector"] = <S>() =>
             [...acc, s]
    }) as Reducer<S, Array<S>>
 
-const asyncCollector: Collectible<Array.type, Identity.type>["asyncCollector"] =
-   asyncCollectorFromCollector(collector)
+const asyncCollector = asyncCollectorFromCollector<Array.type, Identity.type>(collector)
 
 const { transform } =
    transformableFromCollectible<Array.type, Identity.type>({

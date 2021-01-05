@@ -9,7 +9,7 @@ declare module "../types" {
    }
 
    export namespace Reducer {
-      export const type = "Reducer"
+      export const type: unique symbol
       export type type = typeof type
 
       export type HigherType =
@@ -110,7 +110,7 @@ const liftName: Nameable<Reducer.type>["liftName"] = <K extends string>(
                      }) as Record<K, T>
          })
 
-const { comprehend } = defineComprehendible({
+const { comprehend } = defineComprehendible<Reducer.type>({
    liftName,
    extend
 })

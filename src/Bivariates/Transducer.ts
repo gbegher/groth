@@ -6,7 +6,7 @@ declare module "../types" {
    export type Transducer<S, T> = <A>(reducer: Reducer<T, A>) => Reducer<S, A>
 
    export namespace Transducer {
-      export const type = "Transducer"
+      export const type: unique symbol
       export type type = typeof type
 
       export type HigherType =
@@ -131,7 +131,7 @@ const liftName: Nameable<Transducer.type>["liftName"] = <K extends string>(
                   return tr(map(nName)(reducer))
                }
 
-const { comprehend } = defineComprehendible({
+const { comprehend } = defineComprehendible<Transducer.type>({
    liftName,
    extend
 })

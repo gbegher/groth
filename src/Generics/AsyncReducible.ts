@@ -8,31 +8,17 @@ declare module "../types" {
    }
 
    export namespace AsyncReducible {
-      export type Augmentor<F, X> =
-         F extends Generic ?
-         X extends Generic
-            ?
-               {
-                  asAsyncReducible: <S>(fs: $<F, S>) => AsyncReducible<$<X, S>>
-               }
-            : never : never
+      export type Augmentor<F extends Generic, X extends Generic> = {
+         asAsyncReducible: <S>(fs: $<F, S>) => AsyncReducible<$<X, S>>
+      }
 
-      export const type = "AsyncReducible"
+      export const type: unique symbol
       export type type = typeof type
-
-      export const augmentor = "AsyncReducible.Augmentor"
-      export type augmentor = typeof augmentor
    }
 
    export namespace Generic {
       export interface Register<A1> {
          [AsyncReducible.type]: AsyncReducible<A1>
-      }
-   }
-
-   export namespace Bivariate {
-      export interface Register<A1, A2> {
-         [AsyncReducible.augmentor]: AsyncReducible.Augmentor<A1, A2>
       }
    }
 }

@@ -8,7 +8,7 @@ declare module "../types" {
    export type CoKleisliNamed<A, B> = Mor<Named<A>, B>
 
    export namespace Named {
-      export const type = "Named"
+      export const type: unique symbol
       export type type = typeof type
 
       export type HigherType =
@@ -16,7 +16,7 @@ declare module "../types" {
          & Category<Named.cokleisli>
          & { lift: Functor<Named.type, Named.cokleisli, Mor.type>["map"] }
 
-      export const cokleisli = "CoKleisli"
+      export const cokleisli: unique symbol
       export type cokleisli = typeof cokleisli
    }
 
